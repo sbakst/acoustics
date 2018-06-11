@@ -1,0 +1,206 @@
+tamil plotting
+
+
+par(mfrow=c(3,7))
+
+plot(f1~trial, subset(EY3in, sub=='207' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='207' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='212' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='212' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='213' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='213' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='215' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='215' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='218' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='218' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='219' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='219' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='220' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='220' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='221' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='221' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='222' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='222' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='224' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='224' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='227' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='227' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='230' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='230' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='231' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='231' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='232' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='232' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='233' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='233' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='234' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='234' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='235' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='235' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='236' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='236' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='237' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='237' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='238' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='238' & buffer == 'outbuf'), col = 'red')
+
+plot(f1~trial, subset(EY3in, sub=='239' & buffer == 'inbuf'))
+points(f1~trial, subset(EY3out, sub=='239' & buffer == 'outbuf'), col = 'red')
+
+
+
+tamil plotting
+
+par(mfrow=c(3,7))
+
+plot(f2~trial, subset(OW3in, sub=='207' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='207' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='212' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='212' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='213' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='213' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='215' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='215' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='218' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='218' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='219' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='219' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='220' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='220' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='221' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='221' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='222' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='222' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='224' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='224' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='227' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='227' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='230' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='230' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='231' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='231' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='232' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='232' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='233' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='233' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='234' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='234' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='235' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='235' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='236' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='236' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='237' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='237' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='238' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='238' & buffer == 'outbuf'), col = 'red')
+
+plot(f2~trial, subset(OW3in, sub=='239' & buffer == 'inbuf'))
+points(f2~trial, subset(OW3out, sub=='239' & buffer == 'outbuf'), col = 'red')
+
+
+
+
+
+F3
+par(mfrow=c(3,7))
+
+plot(f3~trial, subset(tam23rds, sub=='207' & buffer == 'inbuf'), ylim=c(2100.3000))
+points(f3~trial, subset(tam23rds, sub=='207' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='212' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='212' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='213' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='213' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='215' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='215' & buffer == 'outbuf'), col = 'red')
+, 
+plot(f3~trial, subset(tam23rds, sub=='218' & buffer == 'inbuf'), ylim=c(1800,2500))
+points(f3~trial, subset(tam23rds, sub=='218' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='219' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='219' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='220' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='220' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='221' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='221' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='222' & buffer == 'inbuf'), ylim=c(1800,2600))
+points(f3~trial, subset(tam23rds, sub=='222' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='224' & buffer == 'inbuf'), ylim=c(1800,2600))
+points(f3~trial, subset(tam23rds, sub=='224' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='227' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='227' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='230' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='230' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='231' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='231' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='232' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='232' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='233' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='233' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='234' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='234' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='235' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='235' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='236' & buffer == 'inbuf'), ylim=c(1800,2600))
+points(f3~trial, subset(tam23rds, sub=='236' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='237' & buffer == 'inbuf'), ylim=c(2200,2700))
+points(f3~trial, subset(tam23rds, sub=='237' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='238' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='238' & buffer == 'outbuf'), col = 'red')
+
+plot(f3~trial, subset(tam23rds, sub=='239' & buffer == 'inbuf'))
+points(f3~trial, subset(tam23rds, sub=='239' & buffer == 'outbuf'), col = 'red')
