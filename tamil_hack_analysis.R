@@ -2,6 +2,8 @@
 # I think you used rformant to create this.
 # later you will do this by ultrasound frame, hopefully.
 
+# negative values of adaptation are following, but over 1 = probably a tracking error, or compensated more than the perturbation.
+
 tam23rds<-read.delim('/Users/Sarah/Box Sync/Berkeley/Dissertation/India/tamil_corrected_twothirds_buffs.txt', header = TRUE, sep = '\t')
 
 tam23rds$buf_file<-as.character(tam23rds$buf_file)
@@ -21,7 +23,7 @@ tam23rds_out<-subset(tam23rds,buffer=='outbuf')
 
 
 
-tam23rds$group<-cut(tam23rds_in$trial, 18)
+tam23rds_in$group<-cut(tam23rds_in$trial, 18)
 ar18_med<-aggregate(cbind(f1,f1b,f2,f2b,f3,f3b)~group+sub, data = tam23rds_in, median)
 
 mindf<-NULL
@@ -56,11 +58,24 @@ mindf<-data.frame(mindf)
 
 
 
+mindf$f3max<-mindf$basef3+300
+
+mindf$f3diff<-mindf$basef3-mindf$minf3
+mindf$f2diff<-mindf$arf2base-mindf$f2match
+
+mindf$f3perc<-(mindf$f3diff/300)
+
+mindf$oppf2d<-mindf$f2match-mindf$arf2base
+
+
+
+
+
+
 
 
 f3inbuf<-subset(tam23rds, buffer=='inbuf')
 f3outbuf<-subset(tam23rds, buffer=='outbuf')
-
 
 
 
