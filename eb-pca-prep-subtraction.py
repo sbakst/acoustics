@@ -15,6 +15,7 @@ import subprocess
 import pandas as pd
 from hashlib import sha1
 from collections import OrderedDict
+import csv
 
 # define frame-getting functions.
 def read_metadata(mfile):
@@ -135,7 +136,7 @@ ordultras = sorted(ultras, key = lambda x: x[2])
 # make dictionary for looking up wav given timestamp
 
 tamildict = dict(zip(ordultras,ordtrials))
-print(tamildict)
+#print(tamildict)
 #dictitems = tamildict.items()
 #tamtam = (sorted(dictitems, key= lambda x:int(x[0][3])))
 
@@ -172,11 +173,15 @@ for rf in glob.glob(rawfile_glob_exp):
     # use dictionary linking wav files to ultrasound to look up wav file
        
     for key,value in tamildict.items():
-        print(key)
+#        print(key)
         joined_tp = ('-'.join(key))
-        print(joined_tp)
-        if joined_tp == barename:
-            print(barename)
+#        print(joined_tp)
+#        print(str(joined_tp))
+#        print(str(barename))
+        if joined_tp == os.path.basename(barename):
+#            print(barename)
+            print('banana')
+            trial = (value[3])
             soundname = ('_'.join(value))[:-1]
             wav = os.path.join(args.acousticsdir, (soundname + '.wav'))
             print(wav)
@@ -191,7 +196,7 @@ for rf in glob.glob(rawfile_glob_exp):
 
     # If not sync tg, create list of diffs between frames
     # get number of frames in file
-    idxfile = barename + 'idx.txt' # file should just be a column of numbers
+    idxfile = barename + '.idx.txt' # file should just be a column of numbers
     with open(idxfile) as infile:
         idxreader = csv.reader(infile)
         d = list(idxreader)
@@ -199,20 +204,16 @@ for rf in glob.glob(rawfile_glob_exp):
         last_idx = int((d[rows-1])[0])
         print(last_idx)
 
-    consec_diffs = []
-    for f in np.arange(0,last_idx):
-        minuend = get_frame(rf,f+1, framesize, med_filter = True)
-        subtrahend = get_frame(rf, f, framesize, med_filter = True)
-        cdiff = minuend-subtrahend
-        consec_diffs.append(cdiff)
-    print(consec_diffs)
-    mindiff,mindiff_idx = min((val,idx) for (idx,val) in enumerate(consec_diffs))
-    print(mindiff)
-    print(mindiff_idx)
-
-
-
-
+#    consec_diffs = []
+#    for f in np.arange(0,last_idx):
+#        minuend = get_frame(rf,f+1, framesize, med_filter = True)
+#        subtrahend = get_frame(rf, f, framesize, med_filter = True)
+#        cdiff = minuend-subtrahend
+#        consec_diffs.append(cdiff)
+#    print(consec_diffs)
+#    mindiff,mindiff_idx = min((val,idx) for (idx,val) in enumerate(consec_diffs))
+#    print(mindiff)
+#    print(mindiff_idx)
 
     # loop over all target segments present in TG
     for v,m in pm.tier('phone').search(vre, return_match=True):
@@ -224,7 +225,7 @@ for rf in glob.glob(rawfile_glob_exp):
         else:
             phone = v.text
 
-        before = pm.tier('phone').prev(v).text # get preceding C for vowels
+            before = pm.tier('phone').prev(v).text # get preceding C for vowels
 #        after = pm.tier('phone').next(v).text # get following V for consonants
 # took out after line because probably not necessary?
 
@@ -233,7 +234,41 @@ for rf in glob.glob(rawfile_glob_exp):
 
         # get midpoint time and find closest ultrasound frame in sync TG
         # TODO more efficient to duplicate ultratils frame_at approach
-#        mid_timepoint = v.center
+
+
+### CHECK INDENTATION BELOW
+
+        mid_timepoint = v.center
+        t1 = v.t1
+        print(t1)
+        t2 = v.t2
+        vlen = t2-t1
+        midperc = (mid_timepoint-t1)/vlen
+
+        prebuf = 12
+        postbuf = 7
+
+        frameperc = int(last_idx * midperc)
+        frame_start = frameperc - prebuf
+        frame_end = frameperc + postbuf
+        print(frame_start)
+        print(frame_end)
+
+
+    consec_diffs = []
+    for f in np.arange(frame_start,frame_end):
+        minuend = get_frame(rf,f+1, myframesize, med_filter = True)
+        subtrahend = get_frame(rf, f, myframesize, med_filter = True)
+        cdiff = minuend-subtrahend
+        cdiffnorm = np.linalg.norm(cdiff)
+        consec_diffs.append(cdiffnorm)
+    print(consec_diffs)
+    mindiff,mindiff_idx = min((val,idx) for (idx,val) in enumerate(consec_diffs))
+    print(mindiff)
+    print(mindiff_idx)
+    rl_frame_idx = frame_start + mindiff_idx
+
+
 #        diff_list = []
 #        diff2_list = []
 #        for frame in sync_pm.tier('pulse_idx'):
@@ -246,61 +281,73 @@ for rf in glob.glob(rawfile_glob_exp):
 #        mid_raw_data_idx_num = min(enumerate(diff2_list), key=itemgetter(1))[0] 
 
         # get frame, and check for NaN frames
-#        change = 0
-#        discard_acq = False
-#        while True:
-#            pre_rawdata = get_frame(rf,mid_pulse_idx_num,myframesize,med_filter=False)
-#            if pre_rawdata is None:
-#                mid_frame_num -= 1
-#                change += 1
-#                if change > threshhold:
-#                    with open(logfile, "a") as log:
-#                        log.write(acq+"\t"+stim+"\t"+phone+"\t"+"discarded"+"\t"+"passed threshhold")
-#                    print("Frame change threshhold passed; acq {} discarded".format(acq))
-#                    discard_acq = True
-#                    break
-#                else:
-#                    pass
-#            else:
-#                if change > 0:
-#                    with open(logfile, "a") as log:
-#                        log.write(acq+"\t"+stim+"\t"+phone+"\t"+"changed by {:}".format(change)+"\t"+"N/A")
-#                    print("Changed target in {:} by".format(acq), change, "frames")
-#                break
-
-#        # discard the acquisition if needed
-#        if discard_acq:
-#            shutil.copytree(parent, os.path.join(discard_folder,acq))
-#            shutil.rmtree(parent)
-#            continue 
-
+    change = 0
+    discard_acq = False
+    while True:
+        pre_rawdata = get_frame(rf,rl_frame_idx,myframesize,med_filter=False)
+        print('here is prerawdata')
+        print(pre_rawdata)
+        print('Nate is the best')
+        if pre_rawdata is None:
+            print('pre_rawdata is None')
+            mid_frame_num -= 1
+            change += 1
+            if change > threshhold:
+                print('change is greater than threshhold')
+                with open(logfile, "a") as log:
+                    log.write(acq+"\t"+stim+"\t"+phone+"\t"+"discarded"+"\t"+"passed threshhold")
+                    print("Frame change threshhold passed; acq {} discarded".format(acq))
+                    discard_acq = True
+                break
+            else:
+                pass
+        else:
+            if change > 0:
+                print('change is greater than zero')
+                with open(logfile, "a") as log:
+                    log.write(acq+"\t"+stim+"\t"+phone+"\t"+"changed by {:}".format(change)+"\t"+"N/A")
+                print("Changed target in {:} by".format(acq), change, "frames")
+            break
+        # discard the acquisition if needed
+        print('more poop')
+    if discard_acq:
+        print('poop')
+        shutil.copytree(parent, os.path.join(discard_folder,acq))
+        shutil.rmtree(parent)
+        continue 
         # preprocessing of images
-        rawdata = pre_rawdata.astype(np.uint8)
-
+    print('now we do the rawdata')
+    rawdata = pre_rawdata.astype(np.uint8)
+    print('here is a rawdata')
+    print(rawdata)
         # generate metadata object for the current acquisition
-        recs.append(
-            OrderedDict([
-                ('timestamp', acq),
-                ('time', v.center),
-                ('pulseidx', int(mid_pulse_idx_num)),
-                ('rawdataidx', int(mid_raw_data_idx_num)),
-                ('width', frame_dim_1),
-                ('height', frame_dim_2),
-                ('phone', phone),
-                ('stim', stim),
-                ('targ', targ),
-                ('before', before),
-                ('after', after),
-                ('sha1', sha1(rawdata.ravel()).hexdigest()),
-                ('sha1_dtype', rawdata.dtype)
-            ])
-        )
+    recs.append(
+        OrderedDict([
+            ('timestamp', acq),
+            ('trial', trial),
+            ('time', v.center),
+            ('pulseidx', int(rl_frame_idx)),
+            ('rawdataidx', int(rl_frame_idx)),
+            ('width', frame_dim_1),
+            ('height', frame_dim_2),
+            ('phone', phone),
+            ('stim', stim),
+            ('targ', targ),
+            ('before', before),
+            ('sha1', sha1(rawdata.ravel()).hexdigest()),
+            ('sha1_dtype', rawdata.dtype)
+        ])
+    )
+    print('recs')
+    print(recs)
 
         # add frame to frames list
-        if data is None:
-            data = np.expand_dims(rawdata, axis=0)
-        else:
-            data = np.concatenate([data, np.expand_dims(rawdata, axis=0)])
+    if data is None:
+        data = np.expand_dims(rawdata, axis=0)
+    else:
+        data = np.concatenate([data, np.expand_dims(rawdata, axis=0)])
+    print(data)
+#########################################
 
 md = pd.DataFrame.from_records(recs, columns=recs[0].keys())
 
