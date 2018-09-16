@@ -112,13 +112,15 @@ for dirs, subdir, files in os.walk(args.acousticsdir):
     for wav in files:
         if os.path.splitext(wav)[1]=='.wav':
             tup = re.split('_|.wav',wav)
-            tuplist.append(tuple(tup))
+            if tup[1] == 'inbuf':
+#                print(tup[3])
+                tuplist.append(tuple(tup))
 #print(tuplist)
 # sort tuples by trial number, index 3
 
 ordtrials = []
 ordtrials = sorted(tuplist, key = lambda x: int(x[3]))
-
+print(ordtrials)
 # make list of ultrasounds
 
 ultras = []
@@ -127,6 +129,7 @@ for dirs, subdir, files in os.walk(expdir):
 # split up timestamp
         tptup = re.split('-',tp)
         ultras.append(tuple(tptup))
+        print(tptup)
 
 # split order by 3rd element, time
 
@@ -139,7 +142,7 @@ tamildict = dict(zip(ordultras,ordtrials))
 #print(tamildict)
 #dictitems = tamildict.items()
 #tamtam = (sorted(dictitems, key= lambda x:int(x[0][3])))
-
+#print(tamtam)
 
 ####################
 with open(logfile,"w") as header:
@@ -179,9 +182,10 @@ for rf in glob.glob(rawfile_glob_exp):
 #        print(str(joined_tp))
 #        print(str(barename))
         if joined_tp == os.path.basename(barename):
-#            print(barename)
+            print(barename)
             print('banana')
             trial = (value[3])
+            print(trial)
             soundname = ('_'.join(value))[:-1]
             wav = os.path.join(args.acousticsdir, (soundname + '.wav'))
             print(wav)
@@ -316,10 +320,10 @@ for rf in glob.glob(rawfile_glob_exp):
         shutil.rmtree(parent)
         continue 
         # preprocessing of images
-    print('now we do the rawdata')
+#    print('now we do the rawdata')
     rawdata = pre_rawdata.astype(np.uint8)
-    print('here is a rawdata')
-    print(rawdata)
+#    print('here is a rawdata')
+#    print(rawdata)
         # generate metadata object for the current acquisition
     recs.append(
         OrderedDict([
@@ -339,8 +343,8 @@ for rf in glob.glob(rawfile_glob_exp):
         ])
     )
     print('recs')
-    print(recs)
-
+#    print(recs)
+    print(trial)
         # add frame to frames list
     if data is None:
         data = np.expand_dims(rawdata, axis=0)
