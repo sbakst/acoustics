@@ -15,6 +15,7 @@ import subprocess
 import pandas as pd
 from hashlib import sha1
 from collections import OrderedDict
+import shutil
 import csv
 from ultratils.rawreader import RawReader
 from ultratils.pysonix.scanconvert import Converter
@@ -109,6 +110,8 @@ parser.add_argument("sub", help="Subject number")
 parser.add_argument("stimulus",help="stimulus")
 args = parser.parse_args()
 
+subject = args.sub
+
 # check for appropriate directory
 try:
     expdir = args.ultradirectory
@@ -126,7 +129,7 @@ print("Starting...")
 # initialize rest of params for output array
 data = None # array to hold ultrasound data
 frame_dim_1 = 127
-frame_dim_2 = 255
+frame_dim_2 = 1020#255
 recs = [] # metadata store
 
 # distance (in frames) away from intended time point that can be subbed in
@@ -284,7 +287,7 @@ for rf in glob.glob(rawfile_glob_exp):
         print(frameperc)
 
     rlframes = []
-    for w in np.arange(0,4):
+    for w in np.arange(0,len(prebufs)):
         frame_start = frameperc - prebufs[w]
         frame_end = frameperc + postbufs[w]
 #        print(frame_start)
@@ -298,7 +301,9 @@ for rf in glob.glob(rawfile_glob_exp):
     #        subtrahend = get_frame(rf, f, myframesize, med_filter = True)
             rdr = RawReader(rf, nscanlines=nscanlines, npoints=npoints) # or whatever the appropriate parameters actually are
             minuend = rdr.get_frame(f+1)
+            minuend = ndimage.median_filter(minuend, 3)
             subtrahend = rdr.get_frame(f)
+            subtrahend = ndimage.median_filter(subtrahend, 3)
             cdiff = minuend-subtrahend
             cdiffnorm = np.linalg.norm(cdiff)
             consec_diffs.append(cdiffnorm)
@@ -315,8 +320,8 @@ for rf in glob.glob(rawfile_glob_exp):
     maxi, maxidind = max((val,idx) for (idx,val) in enumerate(rlframes))
     indsdiff = maxi-mini
     rl_frame_idx = mini
-    if (indsdiff > 6) or (0 < (maxi-midperc) < 3): #(midperc-mini)):
-        print('check' + trial)
+    if (indsdiff > 6) or ((0 < (maxi-frameperc) < 3) and indsdiff != 0) : #(midperc-mini)):
+        print('\n check ' + trial + '\n')
 
         class Header(object):
             def __init__(self):
@@ -341,8 +346,9 @@ for rf in glob.glob(rawfile_glob_exp):
         image_shape = (1020,127)#(255,127)
 #        rdr = RawReader(rf, nscanlines=nscanlines, npoints = npoints)
         print(rf)
-        for f in np.arange((midperc-16),(midperc+7)):
+        for f in np.arange((frameperc-20),(frameperc+10)):
             d = rdr.get_frame(f).reshape(image_shape)
+            d = ndimage.median_filter(d, 3)
             mag = np.max(d) - np.min(d)
             d = (d-np.min(d))/mag*255
             pcn = np.flipud(c.as_bmp(np.flipud(d)))
@@ -353,12 +359,16 @@ for rf in glob.glob(rawfile_glob_exp):
             ultradir = os.path.join(os.path.basename(barename),file_ending)
             savepath = os.path.join(expdir,ultradir)
             print(savepath)
-        frameno = input('select a frame number for ' + sub + 'trial' + trial)             
-        rl_frame_idx = frameno-1
+            plt.savefig(savepath)
+        rl_frame_idx = int(input('\n \n select a frame number for ' + subject + ' trial ' + trial + '\n' + 'the length of the vowel was ' +  str(float(vlen)) + ' or about' + str(float(vlen/17)) + ' frames.'))             
+#        it is the same frame as idx because the frame number IS the index (frame numbering starts at 0)
+#        rl_frame_idx = frameno-1
 
         # get frame, and check for NaN frames
     change = 0
     discard_acq = False
+    if rl_frame_idx ==0:
+        discard_acq = True
     while True:
 #        pre_rawdata = get_frame(rf,rl_frame_idx,myframesize,med_filter=False)
         pre_rawdata = rdr.get_frame(rl_frame_idx) 
