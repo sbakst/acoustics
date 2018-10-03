@@ -71,7 +71,11 @@ for dirs, times, files in os.walk(train):
         stimulus.append(str(stimtext))
         if any(substring in stimtext for substring in WORDS): 
             tg = os.path.join(utt,(timestamp+'.TextGrid')) # may need to change to just TextGrid depending on when data is from
-            wav = os.path.join(utt,(timestamp+'.wav')) # may need to change to bpr.ch1.wav depending on when data is from
+                if not tg:
+                    tg = os.path.join(utt,(timestamp+'.bpr.ch1.TextGrid'))
+            wav = os.path.join(utt,(timestamp+'bpr.ch1.wav')) # may need to change to bpr.ch1.wav depending on when data is from
+                if not wav:
+                    wav = os.path.join(utt,(timestamp+'.wav'))
             syncfile = os.path.join(utt,(timestamp+'.bpr.sync.txt'))
        #     if not syncfile:
        #         continue

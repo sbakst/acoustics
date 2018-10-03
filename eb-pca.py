@@ -32,6 +32,9 @@ data_in = os.path.join(expdir, 'frames.npy')
 data = np.load(data_in)
 metadata_in = os.path.join(expdir, 'frames_metadata.pickle')
 md = pd.read_pickle(metadata_in)
+print(data.shape)
+
+
 
 # sanity checks
 assert(len(md) == data.shape[0]) # make sure one md row for each frame
@@ -60,9 +63,10 @@ def denoise_and_threshold(rawdata,in_value=90):
     rawdata_new3 = np.where(rawdata_new2 > value, 255, 0)
     return rawdata_new3
 
-#sub_data = ndimage.median_filter(sub_data, 1)
+# uncommented 64 (just below) and commented lin 66)
+sub_data = ndimage.median_filter(sub_data, 1)# we had tried 3
 thresh_value = 160 
-sub_data = denoise_and_threshold(sub_data,thresh_value)
+#sub_data = denoise_and_threshold(sub_data,thresh_value)
 
 # TODO do PCA
 pca = PCA(n_components=n_components) 
@@ -100,8 +104,9 @@ if args.visualize:
             pass
     
     header = Header()
+    print(header)
     header.w = 127          # input image width
-    header.h = 255          # input image height
+    header.h = 255#1020 #255          # input image height
     header.sf = 4000000     # for ultrasonix this is the vec-freq value
     probe = Probe()
     probe.radius = 10000    # based on '10' in transducer model number
@@ -109,7 +114,7 @@ if args.visualize:
     probe.pitch = 185 #205  # guess based on Ultrasonix C9-5/10 transducer
     c = Converter(header, probe)
 
-    image_shape = (255,127)
+    image_shape = (255,127)#(1020,127)#(255,127)
 
     for n in range(0,n_components):
         d = pca.components_[n].reshape(image_shape)

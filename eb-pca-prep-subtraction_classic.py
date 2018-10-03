@@ -124,7 +124,7 @@ print("Starting...")
 # initialize rest of params for output array
 data = None # array to hold ultrasound data
 frame_dim_1 = 127
-frame_dim_2 = 255
+frame_dim_2 = 1020#255
 recs = [] # metadata store
 
 # distance (in frames) away from intended time point that can be subbed in
@@ -133,8 +133,8 @@ threshhold = 3
 # output filepaths
 logfile = os.path.join(expdir,"frames_log.txt")
 discard_folder = os.path.join(expdir,"discards")
-frames_out = os.path.join(expdir,"frames.npy")
-metadata_out = os.path.join(expdir,"frames_metadata.pickle")
+frames_out = os.path.join(expdir,"classic_frames.npy")
+metadata_out = os.path.join(expdir,"classic_frames_metadata.pickle")
 
 # create the dictionary
 

@@ -159,7 +159,8 @@ for rf in glob.glob(rawfile_glob_exp):
     print("Now working on {:}...".format(acq))
     # get base name and get frame size from local .img.txt file
     barename = os.path.splitext(rf)[0]
-
+    print(barename)
+#    print(os.path.split(barename)[1])
     # TODO proof this against breaking if first acq doesn't have img.txt
     try:
         myframesize = get_frame_size(barename + '.img.txt')
@@ -172,16 +173,20 @@ for rf in glob.glob(rawfile_glob_exp):
     # use dictionary linking wav files to ultrasound to look up wav file
        
     for key,value in tamildict.items():
-        print(key)
+#        print(key)
         joined_tp = ('-'.join(key))
         print(joined_tp)
-        if joined_tp == barename:
+        if joined_tp == os.path.split(barename)[1]:
+            print('yaaaas')
             print(barename)
             soundname = ('_'.join(value))[:-1]
             wav = os.path.join(args.acousticsdir, (soundname + '.wav'))
             print(wav)
             tg = os.path.join(args.acousticsdir, (soundname + '.TextGrid'))
-
+            print(tg)
+            break
+#            if not os.path.isfile(tg):
+#                break
     # get WAV file and associated TextGrid; create label manager
 #    wav = barename + '.ch1.wav'
 #    tg = barename + '.ch1.TextGrid'
