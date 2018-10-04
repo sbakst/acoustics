@@ -280,8 +280,8 @@ for rf in glob.glob(rawfile_glob_exp):
 
 #        prebuf = 12
 #        postbuf = 4
-        prebufs = [9, 8, 7, 6]
-        postbufs = [1, 2, 3, 4]
+        prebufs = [7, 6, 5, 4]
+        postbufs = [3, 4, 5, 6]
 
         frameperc = int(last_idx * midperc)
         print(frameperc)
