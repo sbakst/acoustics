@@ -280,8 +280,8 @@ for rf in glob.glob(rawfile_glob_exp):
 
 #        prebuf = 12
 #        postbuf = 4
-        prebufs = [15, 14, 13, 12]
-        postbufs = [4, 5, 6, 7]
+        prebufs = [9, 8, 7, 6]
+        postbufs = [1, 2, 3, 4]
 
         frameperc = int(last_idx * midperc)
         print(frameperc)
@@ -346,7 +346,7 @@ for rf in glob.glob(rawfile_glob_exp):
         image_shape = (1020,127)#(255,127)
 #        rdr = RawReader(rf, nscanlines=nscanlines, npoints = npoints)
         print(rf)
-        for f in np.arange((frameperc-20),(frameperc+10)):
+        for f in np.arange((frameperc-10),(frameperc+2)):
             d = rdr.get_frame(f).reshape(image_shape)
             d = ndimage.median_filter(d, 3)
             mag = np.max(d) - np.min(d)
