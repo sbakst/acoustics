@@ -87,11 +87,10 @@ for dirs, times, files in os.walk(subbmpdir):
         stimulus.append(str(stimtext))
         if any(substring in stimtext for substring in WORDS): 
             tg = os.path.join(utt,(timestamp+'.TextGrid')) # may need to change to just TextGrid depending on when data is from
-            if not tg:
+            wav = os.path.join(utt,(timestamp+'.wav'))
+            if not os.path.isfile(tg):
                 tg = os.path.join(utt,(timestamp+'.bpr.ch1.TextGrid'))
-            wav = os.path.join(utt,(timestamp+'.bpr.ch1.wav')) # may need to change to bpr.ch1.wav depending on when data is from
-            if not wav:
-                wav = os.path.join(utt,(timestamp+'.wav'))
+                wav = os.path.join(utt,(timestamp+'.bpr.ch1.wav')) # may need to change to bpr.ch1.wav depending on when data is from
             print(wav)
             # syncfile = os.path.join(utt,(timestamp+'.bpr.sync.txt'))
        #     if not syncfile:
@@ -114,32 +113,33 @@ for dirs, times, files in os.walk(subbmpdir):
                 print(q)
                 print(s)
                 imnbr = len(imlist) #get the number of images
-            if rpca is None:
-                rpca = np.empty([len(os.listdir(bmpdir))]+list(im.shape[0:2])) * np.nan
-            difflist = []
-            for i in range(imnbr):
-                print(i)
-                print(imlist[i])
-                print(os.path.join(bmpdir,imlist[i]))
-  #              call(["convert", os.path.join(utt,imlist[i]), "-set", "colorspace", "RGB", os.path.join(utt,imlist[i])])
-  #              call(["convert", os.path.join(utt,imlist[i]), "-set", "colorspace", "Gray", os.path.join(utt,imlist[i])])
-                if i > 0:
-                    diffmatrix = np.array(Image.open(os.path.join(bmpdir,imlist[i])))-np.array(Image.open(os.path.join(bmpdir,imlist[i-1])))
-                    difflist.append(np.linalg.norm(diffmatrix))
-         	    # identify frame where the difference in tongue shape is lowest.
-            print(difflist)
-            min_val, min_idx = min((val,idx) for (idx, val) in enumerate(difflist))
-            print(min_val)
-            print(min_idx)
-	    # add frame to array
-            frame_n = imlist[min_idx]
-            frame_number = os.path.splitext(os.path.splitext(frame_n)[0])[1][1:] # actual frame number, not INDEX
-            framenos.append(frame_number)
-            openframe = np.array(Image.open(os.path.join(bmpdir,frame_n)))
-            myrframe = ndimage.median_filter(openframe,5)
-            print(myrframe)
-            rpca[tindex,:,:] = myrframe
-            print(syncfile)
+                print(imnbr)
+                if rpca is None:
+                    rpca = np.empty([len(os.listdir(subbmpdir))]+list(im.shape[0:2])) * np.nan
+                difflist = []
+                for i in range(imnbr):
+                    print(i)
+                    print(imlist[i])
+                    print(os.path.join(bmpdir,imlist[i]))
+  #                  call(["convert", os.path.join(utt,imlist[i]), "-set", "colorspace", "RGB", os.path.join(utt,imlist[i])])
+  #                  call(["convert", os.path.join(utt,imlist[i]), "-set", "colorspace", "Gray", os.path.join(utt,imlist[i])])
+                    if i > 0:
+                        diffmatrix = np.array(Image.open(os.path.join(bmpdir,imlist[i])))-np.array(Image.open(os.path.join(bmpdir,imlist[i-1])))
+                        difflist.append(np.linalg.norm(diffmatrix))
+         	        # identify frame where the difference in tongue shape is lowest.
+                print(difflist)
+                min_val, min_idx = min((val,idx) for (idx, val) in enumerate(difflist))
+                print(min_val)
+                print(min_idx)
+	               # add frame to array
+                frame_n = imlist[min_idx]
+                frame_number = os.path.splitext(os.path.splitext(frame_n)[0])[1][1:] # actual frame number, not INDEX
+                framenos.append(frame_number)
+                openframe = np.array(Image.open(os.path.join(bmpdir,frame_n)))
+                myrframe = ndimage.median_filter(openframe,5)
+                print(myrframe)
+                rpca[tindex,:,:] = myrframe
+                print(syncfile)
 
 		# do the acoustics: find timepoint (time) in file where that frame occurs using the syncfile
            # if int(args.subject) > 120: # change in syncfile format
@@ -203,18 +203,46 @@ for dirs, times, files in os.walk(subbmpdir):
 print(len(rpca))
 
 
+
+
 # now we are going to take all the differences.
 subavg = np.linalg.norm(np.mean(rpca,axis=0))# find average along axis 0
 raw_list=[]
 norm_list = []
 normalized_list = []
 
-rpca_seq = list(range((len(rpca)-1)))
+
+rpca = np.squeeze(rpca)
+framenos = np.squeeze(np.array(framenos))
+ts = np.squeeze(np.array(ts))
+frmtimes = np.squeeze(np.array(frmtimes))
+frmf3 = np.squeeze(np.array(frmf3))
+frmf2 = np.squeeze(np.array(frmf2))
+frmf1 = np.squeeze(np.array(frmf1))
+
+
+print(rpca)
+
+
+keep_indices = np.where(~np.isnan(rpca).any(axis=(1,2)))[0]
+print(keep_indices)
+
+kept_rpca = rpca[keep_indices]
+# kept_framenos = framenos[keep_indices]
+# kept_ts = ts[keep_indices]
+# kept_frmtimes = frmtimes[keep_indices] # when the frame occurs from sync.txt
+# kept_stimulus = np.array(stimulus,str)[keep_indices] # stimulus word
+# kept_f3 = frmf3[keep_indices]
+# kept_f2 = frmf2[keep_indices]
+# kept_f1 = frmf1[keep_indices]
+
+
+rpca_seq = list(range((len(kept_rpca)-1)))
 
 for double in combinations(rpca_seq,2):
     minuend = double[0]
     subtrahend = double[1]    
-    rawdiff = rpca[minuend,:,:]-rpca[subtrahend,:,:]
+    rawdiff = kept_rpca[minuend,:,:]-kept_rpca[subtrahend,:,:]
     normdiff = np.linalg.norm(rawdiff)
     normalizeddiff = normdiff/subavg
     raw_list.append(rawdiff)
@@ -231,11 +259,11 @@ print(normalizeddiff)
 print(norm_list)
 
 
-outdiffs = os.path.join(bmpdir,'diffs.txt')
+outdiffs = os.path.join(subbmpdir,'diffs.txt')
 
 od = open(outdiffs, 'w')
 od.write('\t'.join(['subject','norm_avg','normalized_avg','sd_norm','sd_normalized'])+'\n')
-od.write('\t'.join([SUB,str(norm_avg),str(normalized_avg),str(sd_norm),str(sd_normalized)])+'\n')
+od.write('\t'.join([args.subject,str(norm_avg),str(normalized_avg),str(sd_norm),str(sd_normalized)])+'\n')
 #f.write(str(covariance))
 od.close()
 
@@ -245,30 +273,6 @@ if args.pca:
 
 # remove any indices for all objects generated above where frames have NaN values (due to skipping or otherwise)
 # ooooo she's squeezin'!
-    rpca = np.squeeze(rpca)
-    framenos = np.squeeze(np.array(framenos))
-    ts = np.squeeze(np.array(ts))
-    frmtimes = np.squeeze(np.array(frmtimes))
-    frmf3 = np.squeeze(np.array(frmf3))
-    frmf2 = np.squeeze(np.array(frmf2))
-    frmf1 = np.squeeze(np.array(frmf1))
-    
-    
-    print(rpca)
-    
-    
-    keep_indices = np.where(~np.isnan(rpca).any(axis=(1,2)))[0]
-    print(keep_indices)
-    
-    kept_rpca = rpca[keep_indices]
-    kept_framenos = framenos[keep_indices]
-    kept_ts = ts[keep_indices]
-    kept_frmtimes = frmtimes[keep_indices] # when the frame occurs from sync.txt
-    kept_stimulus = np.array(stimulus,str)[keep_indices] # stimulus word
-    kept_f3 = frmf3[keep_indices]
-    kept_f2 = frmf2[keep_indices]
-    kept_f1 = frmf1[keep_indices]
-
 
 
     n_components = 5
@@ -304,11 +308,11 @@ if args.pca:
     print(kept_f2)
     print(kept_f3)
     
-    outfile = os.path.join(bmpdir, 'pca.csv')
+    outfile = os.path.join(subbmpdir, 'pca.csv')
     d = np.row_stack((headers,np.column_stack((kept_ts,kept_framenos,kept_f1,kept_f2,kept_f3,analysis))))
     np.savetxt(outfile, d, fmt="%s", delimiter =',')
     
-    expl = os.path.join(bmpdir, 'explain.txt')
+    expl = os.path.join(subbmpdir, 'explain.txt')
     f = open(expl, 'w')
     f.write('explained variance'+ str(pca.explained_variance_)+'\n')
     f.write('explained ratio: '+ str(pca.explained_variance_ratio_))
@@ -327,7 +331,7 @@ if args.pca:
             print (pic)
             mag = np.max(pic) - np.min(pic)
             pic = (pic-np.min(pic))/mag*255
-            pcn = misc.imsave(os.path.join(bmpdir,'pc'+str(n+1)+'.png'),pic)
+            pcn = misc.imsave(os.path.join(subbmpdir,'pc'+str(n+1)+'.png'),pic)
     
 
 
