@@ -74,7 +74,7 @@ for dirs, times, files in os.walk(subbmpdir):
         subjrframelist = []
         utt = os.path.join(utildir,str(timestamp))
         syncfile = os.path.join(utt,(timestamp+'.bpr.sync.txt'))
-        print(syncfile)
+       # print(syncfile)
         if not os.path.isfile(syncfile):
             print("can't find syncfile")
 #        print(syncfile)
@@ -90,6 +90,7 @@ for dirs, times, files in os.walk(subbmpdir):
             wav = os.path.join(utt,(timestamp+'.wav'))
             if not os.path.isfile(tg):
                 tg = os.path.join(utt,(timestamp+'.bpr.ch1.TextGrid'))
+            if not os.path.isfile(wav):
                 wav = os.path.join(utt,(timestamp+'.bpr.ch1.wav')) # may need to change to bpr.ch1.wav depending on when data is from
             print(wav)
             # syncfile = os.path.join(utt,(timestamp+'.bpr.sync.txt'))
@@ -97,8 +98,9 @@ for dirs, times, files in os.walk(subbmpdir):
        #         continue
             subjrframelist = re.compile('.*\.jpg')
             regex = re.compile('(pc[0-9])|(mean).jpg')
+            stimex = re.compile(stimtext) 
             bmpdir = os.path.join(subbmpdir, timestamp)
-            imlist = [i for i in os.listdir(bmpdir) if (subjrframelist.search(i) and not regex.search(i))]
+            imlist = [i for i in os.listdir(bmpdir) if (subjrframelist.search(i) and not regex.search(i) and not stimex.search(i))]
             print(imlist)
             try:
                 im = np.array(Image.open(os.path.join(bmpdir,(imlist[0])))) #open one image to get the size
@@ -133,7 +135,10 @@ for dirs, times, files in os.walk(subbmpdir):
                 print(min_idx)
 	               # add frame to array
                 frame_n = imlist[min_idx]
+                print(frame_n)
+     
                 frame_number = os.path.splitext(os.path.splitext(frame_n)[0])[1][1:] # actual frame number, not INDEX
+                print(frame_number)
                 framenos.append(frame_number)
                 openframe = np.array(Image.open(os.path.join(bmpdir,frame_n)))
                 myrframe = ndimage.median_filter(openframe,5)
@@ -145,68 +150,67 @@ for dirs, times, files in os.walk(subbmpdir):
            # if int(args.subject) > 120: # change in syncfile format
             #    sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',sep = '\t',fields_in_head=True)# False, fields='t1,frameidx')
            # else:
-####            sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',sep = '\t',fields_in_head=False, fields='t1,frameidx')
-####            print(sm)
-####            for v,m in sm.tier('frameidx').search(frame_number, return_match=True):
-####                print(v)
-####                #if int(args.subject) > 120: 
-####                frmtime = v.t1
-####                print(frmtime)
-####                frmtimes.append(frmtime)
-####		# oh, christ. Perform rformant and get F1/F2/F3 at frmtime. But let's stop here for now.
-####                fbfile = (os.path.splitext(wav)[0]+'.fb') # make fbfile name that rformant will write to
-####
-####                try:
-####                    formant_proc = subprocess.check_call(["rformant", wav])#, stdin=rdc_proc.stdout) # also remove 20
-####                except subprocess.CalledProcessError as e:
-####                    print(e)
-####                    print(e.stdout)
-####                ppl_proc = subprocess.Popen(
-####                    ["pplain", fbfile],
-####                    stdout=subprocess.PIPE)
-####                print(fbfile)   
-####				
-####                lm = audiolabel.LabelManager(
-####                   from_file=ppl_proc.stdout,   # read directly from pplain output
-####                   from_type='table',
-####                   sep=" ",
-####                   fields_in_head=False,
-####                   fields="f1,f2,f3,f4",
-####                   t1_col=None,                 # esps output doesn't have a t1 column
-####                   t1_start=0.0,          # autocreate t1 starting with this value and
-####                   t1_step=0.01)             # increase by this step
-####                f3 = lm.tier('f3')
-####                f2 = lm.tier('f2')
-####                f1 = lm.tier('f1')
-####                framef3 = (f3.label_at(frmtime)).text
-####	#            if float(framef3) > 2300:
-####	#                framef3 = "NA"
-####                framef2 = (f2.label_at(frmtime)).text
-####                framef1 = (f1.label_at(frmtime)).text
-####		#        row_out = '\t'.join([str(i),str(a.timestamp), str(val), str(meas_t1), framef2, framef3, str(indx), str(len(mindiffs))])
-####		#        out.write(row_out+'\n')            
-####                frmf3.append(framef3)
-####                frmf2.append(framef2)
-####                frmf1.append(framef1)
-####
-####            else:
-####	# ok now we append a placeholder to anything that wouldn't otherwise get defined:
-####	# frame no
-####	# rpca doesn't need to because we used tindx
-####	# frmtimes
-####                framenos.append('NULL')
-####                frmtimes.append('NULL')
-####                frmf3.append('NULL')
-####                frmf2.append('NULL')
-####                frmf1.append('NULL')
-####                            
+            sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',sep = '\t',fields_in_head=False, fields='t1,frameidx')
+            print(sm)
+            for v,m in sm.tier('frameidx').search(frame_number, return_match=True):
+                print(v)
+                #if int(args.subject) > 120: 
+                frmtime = v.t1
+                print(frmtime)
+                frmtimes.append(frmtime)
+		# oh, christ. Perform rformant and get F1/F2/F3 at frmtime. But let's stop here for now.
+                fbfile = (os.path.splitext(wav)[0]+'.fb') # make fbfile name that rformant will write to
+
+                try:
+                    formant_proc = subprocess.check_call(["rformant", wav])#, stdin=rdc_proc.stdout) # also remove 20
+                except subprocess.CalledProcessError as e:
+                    print(e)
+                    print(e.stdout)
+                ppl_proc = subprocess.Popen(
+                    ["pplain", fbfile],
+                    stdout=subprocess.PIPE)
+                print(fbfile)   
+				
+                lm = audiolabel.LabelManager(
+                   from_file=ppl_proc.stdout,   # read directly from pplain output
+                   from_type='table',
+                   sep=" ",
+                   fields_in_head=False,
+                   fields="f1,f2,f3,f4",
+                   t1_col=None,                 # esps output doesn't have a t1 column
+                   t1_start=0.0,          # autocreate t1 starting with this value and
+                   t1_step=0.01)             # increase by this step
+                f3 = lm.tier('f3')
+                f2 = lm.tier('f2')
+                f1 = lm.tier('f1')
+                framef3 = (f3.label_at(frmtime)).text
+	#            if float(framef3) > 2300:
+	#                framef3 = "NA"
+                framef2 = (f2.label_at(frmtime)).text
+                framef1 = (f1.label_at(frmtime)).text
+		#        row_out = '\t'.join([str(i),str(a.timestamp), str(val), str(meas_t1), framef2, framef3, str(indx), str(len(mindiffs))])
+		#        out.write(row_out+'\n')            
+                frmf3.append(framef3)
+                frmf2.append(framef2)
+                frmf1.append(framef1)
+
+            else:
+	# ok now we append a placeholder to anything that wouldn't otherwise get defined:
+	# frame no
+	# rpca doesn't need to because we used tindx
+	# frmtimes
+                framenos.append('NULL')
+                frmtimes.append('NULL')
+                frmf3.append('NULL')
+                frmf2.append('NULL')
+                frmf1.append('NULL')
+                            
 print(len(rpca))
 
 
 
 
 # now we are going to take all the differences.
-subavg = np.linalg.norm(np.mean(rpca,axis=0))# find average along axis 0
 raw_list=[]
 norm_list = []
 normalized_list = []
@@ -228,14 +232,15 @@ keep_indices = np.where(~np.isnan(rpca).any(axis=(1,2)))[0]
 print(keep_indices)
 
 kept_rpca = rpca[keep_indices]
-# kept_framenos = framenos[keep_indices]
-# kept_ts = ts[keep_indices]
-# kept_frmtimes = frmtimes[keep_indices] # when the frame occurs from sync.txt
-# kept_stimulus = np.array(stimulus,str)[keep_indices] # stimulus word
-# kept_f3 = frmf3[keep_indices]
-# kept_f2 = frmf2[keep_indices]
-# kept_f1 = frmf1[keep_indices]
+kept_framenos = framenos[keep_indices]
+kept_ts = ts[keep_indices]
+kept_frmtimes = frmtimes[keep_indices] # when the frame occurs from sync.txt
+kept_stimulus = np.array(stimulus,str)[keep_indices] # stimulus word
+kept_f3 = frmf3[keep_indices]
+kept_f2 = frmf2[keep_indices]
+kept_f1 = frmf1[keep_indices]
 
+subavg = np.linalg.norm(np.mean(kept_rpca,axis=0))# find average along axis 0
 
 rpca_seq = list(range((len(kept_rpca)-1)))
 
@@ -248,18 +253,18 @@ for double in combinations(rpca_seq,2):
     raw_list.append(rawdiff)
     norm_list.append(normdiff)
     normalized_list.append(normalizeddiff)
-
+    print(double)
 norm_avg = np.mean(norm_list)
 normalized_avg = np.mean(normalized_list)
 sd_norm = np.std(norm_list)
 sd_normalized = np.std(normalized_list)
-print(rawdiff)
-print(normdiff)
-print(normalizeddiff)
-print(norm_list)
+#print(rawdiff)
+#print(normdiff)
+#print(normalizeddiff)
+#print(norm_list)
 
 
-outdiffs = os.path.join(subbmpdir,'diffs.txt')
+outdiffs = os.path.join(subbmpdir,'r_diffs.txt')
 
 od = open(outdiffs, 'w')
 od.write('\t'.join(['subject','norm_avg','normalized_avg','sd_norm','sd_normalized'])+'\n')
