@@ -123,11 +123,15 @@ for dirs, times, files in os.walk(subbmpdir):
                     print(i)
                     print(imlist[i])
                     print(os.path.join(bmpdir,imlist[i]))
+                    bmpnorm = np.linalg.norm(np.array(Image.open(os.path.join(bmpdir, imlist[i]))))
+                    if bmpnorm > 25000:
+                        continue
   #                  call(["convert", os.path.join(utt,imlist[i]), "-set", "colorspace", "RGB", os.path.join(utt,imlist[i])])
   #                  call(["convert", os.path.join(utt,imlist[i]), "-set", "colorspace", "Gray", os.path.join(utt,imlist[i])])
                     if i > 0:
                         diffmatrix = np.array(Image.open(os.path.join(bmpdir,imlist[i])))-np.array(Image.open(os.path.join(bmpdir,imlist[i-1])))
-                        difflist.append(np.linalg.norm(diffmatrix))
+                        if np.linalg.norm(diffmatrix) > 0:
+                            difflist.append(np.linalg.norm(diffmatrix))
          	        # identify frame where the difference in tongue shape is lowest.
                 print(difflist)
                 min_val, min_idx = min((val,idx) for (idx, val) in enumerate(difflist))
@@ -159,42 +163,42 @@ for dirs, times, files in os.walk(subbmpdir):
                 print(frmtime)
                 frmtimes.append(frmtime)
 		# oh, christ. Perform rformant and get F1/F2/F3 at frmtime. But let's stop here for now.
-                fbfile = (os.path.splitext(wav)[0]+'.fb') # make fbfile name that rformant will write to
-
-                try:
-                    formant_proc = subprocess.check_call(["rformant", wav])#, stdin=rdc_proc.stdout) # also remove 20
-                except subprocess.CalledProcessError as e:
-                    print(e)
-                    print(e.stdout)
-                ppl_proc = subprocess.Popen(
-                    ["pplain", fbfile],
-                    stdout=subprocess.PIPE)
-                print(fbfile)   
-				
-                lm = audiolabel.LabelManager(
-                   from_file=ppl_proc.stdout,   # read directly from pplain output
-                   from_type='table',
-                   sep=" ",
-                   fields_in_head=False,
-                   fields="f1,f2,f3,f4",
-                   t1_col=None,                 # esps output doesn't have a t1 column
-                   t1_start=0.0,          # autocreate t1 starting with this value and
-                   t1_step=0.01)             # increase by this step
-                f3 = lm.tier('f3')
-                f2 = lm.tier('f2')
-                f1 = lm.tier('f1')
-                framef3 = (f3.label_at(frmtime)).text
-	#            if float(framef3) > 2300:
-	#                framef3 = "NA"
-                framef2 = (f2.label_at(frmtime)).text
-                framef1 = (f1.label_at(frmtime)).text
-		#        row_out = '\t'.join([str(i),str(a.timestamp), str(val), str(meas_t1), framef2, framef3, str(indx), str(len(mindiffs))])
-		#        out.write(row_out+'\n')            
-                frmf3.append(framef3)
-                frmf2.append(framef2)
-                frmf1.append(framef1)
-
-            else:
+##                fbfile = (os.path.splitext(wav)[0]+'.fb') # make fbfile name that rformant will write to
+##
+##                try:
+##                    formant_proc = subprocess.check_call(["rformant", wav])#, stdin=rdc_proc.stdout) # also remove 20
+##                except subprocess.CalledProcessError as e:
+##                    print(e)
+##                    print(e.stdout)
+##                ppl_proc = subprocess.Popen(
+##                    ["pplain", fbfile],
+##                    stdout=subprocess.PIPE)
+##                print(fbfile)   
+##				
+##                lm = audiolabel.LabelManager(
+##                   from_file=ppl_proc.stdout,   # read directly from pplain output
+##                   from_type='table',
+##                   sep=" ",
+##                   fields_in_head=False,
+##                   fields="f1,f2,f3,f4",
+##                   t1_col=None,                 # esps output doesn't have a t1 column
+##                   t1_start=0.0,          # autocreate t1 starting with this value and
+##                   t1_step=0.01)             # increase by this step
+##                f3 = lm.tier('f3')
+##                f2 = lm.tier('f2')
+##                f1 = lm.tier('f1')
+##                framef3 = (f3.label_at(frmtime)).text
+##	#            if float(framef3) > 2300:
+##	#                framef3 = "NA"
+##                framef2 = (f2.label_at(frmtime)).text
+##                framef1 = (f1.label_at(frmtime)).text
+##		#        row_out = '\t'.join([str(i),str(a.timestamp), str(val), str(meas_t1), framef2, framef3, str(indx), str(len(mindiffs))])
+##		#        out.write(row_out+'\n')            
+##                frmf3.append(framef3)
+##                frmf2.append(framef2)
+##                frmf1.append(framef1)
+##
+##            else:
 	# ok now we append a placeholder to anything that wouldn't otherwise get defined:
 	# frame no
 	# spca doesn't need to because we used tindx
@@ -247,7 +251,7 @@ spca_seq = list(range((len(kept_spca)-1)))
 for double in combinations(spca_seq,2):
     minuend = double[0]
     subtrahend = double[1]    
-    rawdiff = kept_spca[minuend,:,:]-kept_rpca[subtrahend,:,:]
+    rawdiff = kept_spca[minuend,:,:]-kept_spca[subtrahend,:,:]
     normdiff = np.linalg.norm(rawdiff)
     normalizeddiff = normdiff/subavg
     raw_list.append(rawdiff)
@@ -264,7 +268,7 @@ sd_normalized = np.std(normalized_list)
 #print(norm_list)
 
 
-outdiffs = os.path.join(subbmpdir,'r_diffs.txt')
+outdiffs = os.path.join(subbmpdir,'s_diffs.txt')
 
 od = open(outdiffs, 'w')
 od.write('\t'.join(['subject','norm_avg','normalized_avg','sd_norm','sd_normalized'])+'\n')
@@ -289,7 +293,7 @@ if args.pca:
     print(kept_spca.shape[2]) # s?
     
     
-    frames_reshaped = kept_spca.reshape([kept_rpca.shape[0], kept_rpca.shape[1]*kept_rpca.shape[2]])
+    frames_reshaped = kept_spca.reshape([kept_spca.shape[0], kept_spca.shape[1]*kept_spca.shape[2]])
     
     sparse_frames = sparse.csr_matrix(frames_reshaped)
     
