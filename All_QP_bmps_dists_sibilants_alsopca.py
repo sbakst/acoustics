@@ -62,7 +62,7 @@ frmf2= []
 frmf1 = []
 # First, for each directory of bmps, read in the stim.txt.
 
-rpca = None
+spca = None
 
 
 
@@ -116,8 +116,8 @@ for dirs, times, files in os.walk(subbmpdir):
                 print(s)
                 imnbr = len(imlist) #get the number of images
                 print(imnbr)
-                if rpca is None:
-                    rpca = np.empty([len(os.listdir(subbmpdir))]+list(im.shape[0:2])) * np.nan
+                if spca is None:
+                    spca = np.empty([len(os.listdir(subbmpdir))]+list(im.shape[0:2])) * np.nan
                 difflist = []
                 for i in range(imnbr):
                     print(i)
@@ -143,7 +143,7 @@ for dirs, times, files in os.walk(subbmpdir):
                 openframe = np.array(Image.open(os.path.join(bmpdir,frame_n)))
                 myrframe = ndimage.median_filter(openframe,5)
                 print(myrframe)
-                rpca[tindex,:,:] = myrframe
+                spca[tindex,:,:] = myrframe
                 print(syncfile)
 
 		# do the acoustics: find timepoint (time) in file where that frame occurs using the syncfile
@@ -197,7 +197,7 @@ for dirs, times, files in os.walk(subbmpdir):
             else:
 	# ok now we append a placeholder to anything that wouldn't otherwise get defined:
 	# frame no
-	# rpca doesn't need to because we used tindx
+	# spca doesn't need to because we used tindx
 	# frmtimes
                 framenos.append('NULL')
                 frmtimes.append('NULL')
@@ -205,7 +205,7 @@ for dirs, times, files in os.walk(subbmpdir):
                 frmf2.append('NULL')
                 frmf1.append('NULL')
                             
-print(len(rpca))
+print(len(spca))
 
 
 
@@ -216,7 +216,7 @@ norm_list = []
 normalized_list = []
 
 
-rpca = np.squeeze(rpca)
+spca = np.squeeze(spca)
 framenos = np.squeeze(np.array(framenos))
 ts = np.squeeze(np.array(ts))
 frmtimes = np.squeeze(np.array(frmtimes))
@@ -225,13 +225,13 @@ frmf2 = np.squeeze(np.array(frmf2))
 frmf1 = np.squeeze(np.array(frmf1))
 
 
-print(rpca)
+print(spca)
 
 
-keep_indices = np.where(~np.isnan(rpca).any(axis=(1,2)))[0]
+keep_indices = np.where(~np.isnan(spca).any(axis=(1,2)))[0]
 print(keep_indices)
 
-kept_rpca = rpca[keep_indices]
+kept_spca = spca[keep_indices]
 kept_framenos = framenos[keep_indices]
 kept_ts = ts[keep_indices]
 kept_frmtimes = frmtimes[keep_indices] # when the frame occurs from sync.txt
@@ -240,14 +240,14 @@ kept_f3 = frmf3[keep_indices]
 kept_f2 = frmf2[keep_indices]
 kept_f1 = frmf1[keep_indices]
 
-subavg = np.linalg.norm(np.mean(kept_rpca,axis=0))# find average along axis 0
+subavg = np.linalg.norm(np.mean(kept_spca,axis=0))# find average along axis 0
 
-rpca_seq = list(range((len(kept_rpca)-1)))
+spca_seq = list(range((len(kept_spca)-1)))
 
-for double in combinations(rpca_seq,2):
+for double in combinations(spca_seq,2):
     minuend = double[0]
     subtrahend = double[1]    
-    rawdiff = kept_rpca[minuend,:,:]-kept_rpca[subtrahend,:,:]
+    rawdiff = kept_spca[minuend,:,:]-kept_rpca[subtrahend,:,:]
     normdiff = np.linalg.norm(rawdiff)
     normalizeddiff = normdiff/subavg
     raw_list.append(rawdiff)
@@ -284,12 +284,12 @@ if args.pca:
     
     pca = PCA(n_components = n_components)
     
-    print(kept_rpca.shape[0]) # 48ish?
-    print(kept_rpca.shape[1]) # q?
-    print(kept_rpca.shape[2]) # s?
+    print(kept_spca.shape[0]) # 48ish?
+    print(kept_spca.shape[1]) # q?
+    print(kept_spca.shape[2]) # s?
     
     
-    frames_reshaped = kept_rpca.reshape([kept_rpca.shape[0], kept_rpca.shape[1]*kept_rpca.shape[2]])
+    frames_reshaped = kept_spca.reshape([kept_rpca.shape[0], kept_rpca.shape[1]*kept_rpca.shape[2]])
     
     sparse_frames = sparse.csr_matrix(frames_reshaped)
     
@@ -340,8 +340,8 @@ if args.pca:
     
 
 
-#r_mean = np.kept_rpca.mean(0)
-#for i in np.arange(length(kept_rpca[0])):
+#r_mean = np.kept_spca.mean(0)
+#for i in np.arange(length(kept_spca[0])):
 #   std=(x-mu)
 
 

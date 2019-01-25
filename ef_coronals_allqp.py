@@ -31,7 +31,8 @@ subjects = [d for d in os.listdir(PARENTDIR) if os.path.isdir(os.path.join(PAREN
 # logfile = "./log_"+ts+".txt"
 # log = open(logfile,'wb')
 
-for s in np.arange(122,123) : # loop over all subjects; used to say for s in range(0,len(subjects))
+for s in np.arange(120,121) : # loop over all subjects; used to say for s in range(0,len(subjects))
+#for s in [104, 105, 108, 110, 112, 113, 114, 115, 116, 117, 118, 119, 120]:
     subject = str(s) # str(subjects[s]) 
     DIR = os.path.join(PARENTDIR,subject)
     subs = os.listdir(DIR)
@@ -42,6 +43,8 @@ for s in np.arange(122,123) : # loop over all subjects; used to say for s in ran
         print(thepath)
         if thepath.startswith('.'):
             continue
+        if thepath == '2015-04-27T183707-0700':# this was done by hand, 116-130.
+            continue 
       # generate names of all necessary files
         stimfile = DIR+"/"+subs[i]+"/stim.txt"
         wavfile = DIR+"/"+subs[i]+"/"+subs[i]+".bpr.ch1.wav"
@@ -69,12 +72,23 @@ for s in np.arange(122,123) : # loop over all subjects; used to say for s in ran
                             t1 = lab.t1
                             t2 = lab.t2
                             #mid = (t2+t1)/2
-                            sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',fields_in_head=False, fields='t1,frameidx')
+                            if s < 128:
+                                sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',fields_in_head=False, fields='t1,frameidx')
 
     # this assumes all the bprs have already been converted to bmps.
-                            fr1 = sm.tier('frameidx').label_at(t1).text # assuming that tgs have been corrected, this is where we want to start
-                            fr2 = sm.tier('frameidx').label_at(t2).text # assuming that tgs have been corrected, this is where we want to stop
-                         
+                                fr1 = sm.tier('frameidx').label_at(t1).text # assuming that tgs have been corrected, this is where we want to start
+                                fr2 = sm.tier('frameidx').label_at(t2).text # assuming that tgs have been corrected, this is where we want to stop
+                            else:
+                                sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',fields_in_head=True)
+    # this assumes all the bprs have already been converted to bmps.
+                                
+                                fr1 = sm.tier('pulse_idx').label_at(t1).text # assuming that tgs have been corrected, this is where we want to start
+                                fr2 = sm.tier('pulse_idx').label_at(t2).text # assuming that tgs have been corrected, this is where we want to stop
+                                
+                                if fr1 == 'NA':
+                                    fr1 = sm.tier('pulse_idx').label_at(t1 + 0.01).text # assuming that tgs have been corrected, this is where we want to start
+                                if fr2 == 'NA':
+                                    fr2 = sm.tier('pulse_idx').label_at(t2 + 0.01).text # assuming that tgs have been corrected, this is where we want to start
                             if not (os.path.isfile(os.path.splitext(outfile)[0] + '.' + str(fr1)+'.bmp')):
                                 print(os.path.splitext(outfile)[0] + '.' + str(fr1)+'.bmp')
                                 probe = '19'

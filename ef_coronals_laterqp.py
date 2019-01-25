@@ -3,6 +3,7 @@
 ## USAGE: ef_coronals.py SOURCE DESTINATION TARGETS (TARGETWORDS) 
 ## use with a bce that has NOT BEEN UPDATED from summer 2016
 
+# for subjects above 120
 
 import sys
 import os
@@ -24,12 +25,12 @@ PARENTDIR = sys.argv[1]
 #DESTDIR = sys.argv[2]
 #TARGETS = sys.argv[3] # In this script, these refer to vowels--a vowel file I suppose?
 WORDFILE = sys.argv[2]
-#SUB = sys.argv[4]
+SUB = sys.argv[3]
 
 w = open(WORDFILE)
 WORDS = str.split(w.read(),"\n")
 tarlist = []
-tarlist =['R']
+tarlist =['S']
 
 #subjects = [d for d in os.listdir(PARENTDIR) if os.path.isdir(os.path.join(PARENTDIR,d))]
 
@@ -39,18 +40,23 @@ ts = str(time.year*100000000+time.month*1000000+time.day*10000+time.hour*100+tim
 logfile = "./log_"+ts+".txt"
 log = open(logfile,'wb')
 
-e = Exp(expdir=PARENTDIR)#+'/'+SUB)
+expdir = os.path.join(PARENTDIR,SUB)
+
+e = Exp(expdir=expdir)
 e.gather()
 for a in e.acquisitions:
    print(a)
    tp = a.timestamp
+   if tp == '2015-11-17T103748-0800':
+      continue
 #   print(tp)
    stimfile = a.abs_stim_file 
    stim = open(stimfile)
    stimtext = stim.read()
 #   outfile = a.abspath+'/'+tp+'.TextGrid'
-   outfile = PARENTDIR+'/'+tp+'/'+tp+'.TextGrid'
-   bprtg = PARENTDIR+'/'+tp+'/'+tp+'.bpr.sync.TextGrid'
+   outfile = expdir+'/'+tp+'/'+tp+'.TextGrid'
+   print(outfile)
+   bprtg = expdir+'/'+tp+'/'+tp+'.bpr.sync.TextGrid'
    if not os.path.isfile(bprtg):
       continue
       print('no bpr sync')
@@ -60,7 +66,7 @@ for a in e.acquisitions:
    print (fname)
    pm = audiolabel.LabelManager(from_file = outfile, from_type='praat')
    for plab in pm.tier('phone') :
-      if plab.text == 'R' : 
+      if plab.text == 'S' : 
          print (plab.text)
          frt1 = plab.t1
 #         print frt1
