@@ -123,11 +123,17 @@ for dirs, times, files in os.walk(subbmpdir):
                     print(i)
                     print(imlist[i])
                     print(os.path.join(bmpdir,imlist[i]))
+                    bmpnorm = np.linalg.norm(np.array(Image.open(os.path.join(bmpdir, imlist[i]))))
+                    if bmpnorm > 25000:
+                        continue
   #                  call(["convert", os.path.join(utt,imlist[i]), "-set", "colorspace", "RGB", os.path.join(utt,imlist[i])])
   #                  call(["convert", os.path.join(utt,imlist[i]), "-set", "colorspace", "Gray", os.path.join(utt,imlist[i])])
                     if i > 0:
-                        diffmatrix = np.array(Image.open(os.path.join(bmpdir,imlist[i])))-np.array(Image.open(os.path.join(bmpdir,imlist[i-1])))
-                        difflist.append(np.linalg.norm(diffmatrix))
+                        diffmatrix = np.array(Image.open(os.path.join(bmpdir,imlist[i])))-np.array(Image.open(os.path.join(bmpdir,imlist[i-1]))
+                        if np.linalg.norm(diffmatrix) > 0):
+                            difflist.append(np.linalg.norm(diffmatrix))
+                        else:
+                            difflist.append('NA')
          	        # identify frame where the difference in tongue shape is lowest.
                 print(difflist)
                 min_val, min_idx = min((val,idx) for (idx, val) in enumerate(difflist))

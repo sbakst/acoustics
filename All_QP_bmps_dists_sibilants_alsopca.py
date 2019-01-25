@@ -132,6 +132,8 @@ for dirs, times, files in os.walk(subbmpdir):
                         diffmatrix = np.array(Image.open(os.path.join(bmpdir,imlist[i])))-np.array(Image.open(os.path.join(bmpdir,imlist[i-1])))
                         if np.linalg.norm(diffmatrix) > 0:
                             difflist.append(np.linalg.norm(diffmatrix))
+                        else:
+                            difflist.append('NA')
          	        # identify frame where the difference in tongue shape is lowest.
                 print(difflist)
                 min_val, min_idx = min((val,idx) for (idx, val) in enumerate(difflist))
