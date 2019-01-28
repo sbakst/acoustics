@@ -71,7 +71,7 @@ for dirs, times, files in os.walk(subbmpdir):
     for tindex, timestamp in enumerate(times):
 # append some kind of placeholder for when you skip a file
         ts.append(timestamp)
-        subjrframelist = []
+        subjsframelist = []
         utt = os.path.join(utildir,str(timestamp))
         syncfile = os.path.join(utt,(timestamp+'.bpr.sync.txt'))
        # print(syncfile)
@@ -96,16 +96,29 @@ for dirs, times, files in os.walk(subbmpdir):
             # syncfile = os.path.join(utt,(timestamp+'.bpr.sync.txt'))
        #     if not syncfile:
        #         continue
-            subjrframelist = re.compile('.*\.jpg')
+
+
+            # compare output with midpoint.
+
+            pm = audiolabel.LabelManager(from_file = tg, from_type = 'praat')
+            for lab in pm.tier('phone') :
+                if (re.match('S',lab.text)) :
+                    label = lab.text
+                    st1 = lab.t1
+                    st2 = lab.t2
+                    st_frmtime = ((st1 + st2)/2)
+
+
+            subjsframelist = re.compile('.*\.jpg')
             regex = re.compile('(pc[0-9])|(mean).jpg')
             stimex = re.compile(stimtext) 
             bmpdir = os.path.join(subbmpdir, timestamp)
-            imlist = [i for i in os.listdir(bmpdir) if (subjrframelist.search(i) and not regex.search(i) and not stimex.search(i))]
+            imlist = [i for i in os.listdir(bmpdir) if (subjsframelist.search(i) and not regex.search(i) and not stimex.search(i))]
             print(imlist)
             try:
                 im = np.array(Image.open(os.path.join(bmpdir,(imlist[0])))) #open one image to get the size
             except IndexError as e:
-                myrframe = 'NA'
+                mysframe = 'NA'
                 continue
             if len(imlist) > 3:
 #                framenos.append('NA')
@@ -144,13 +157,13 @@ for dirs, times, files in os.walk(subbmpdir):
                 print(frame_n)
      
                 frame_number = os.path.splitext(os.path.splitext(frame_n)[0])[1][1:] # actual frame number, not INDEX
-                print(frame_number)
+#                print(frame_number)
                 framenos.append(frame_number)
                 openframe = np.array(Image.open(os.path.join(bmpdir,frame_n)))
-                myrframe = ndimage.median_filter(openframe,5)
-                print(myrframe)
-                spca[tindex,:,:] = myrframe
-                print(syncfile)
+                mysframe = ndimage.median_filter(openframe,5)
+#                print(mysframe)
+                spca[tindex,:,:] = mysframe
+#                print(syncfile)
 
 		# do the acoustics: find timepoint (time) in file where that frame occurs using the syncfile
            # if int(args.subject) > 120: # change in syncfile format
@@ -158,49 +171,14 @@ for dirs, times, files in os.walk(subbmpdir):
            # else:
             sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',sep = '\t',fields_in_head=False, fields='t1,frameidx')
             print(sm)
+            meanfrm = sm.tier('frameidx').label_at(st_frmtime).text
+            print(meanfrm - frame_number) #compare midpoint from subtraction method; make this into a list that we can look at later
             for v,m in sm.tier('frameidx').search(frame_number, return_match=True):
                 print(v)
                 #if int(args.subject) > 120: 
                 frmtime = v.t1
                 print(frmtime)
                 frmtimes.append(frmtime)
-		# oh, christ. Perform rformant and get F1/F2/F3 at frmtime. But let's stop here for now.
-##                fbfile = (os.path.splitext(wav)[0]+'.fb') # make fbfile name that rformant will write to
-##
-##                try:
-##                    formant_proc = subprocess.check_call(["rformant", wav])#, stdin=rdc_proc.stdout) # also remove 20
-##                except subprocess.CalledProcessError as e:
-##                    print(e)
-##                    print(e.stdout)
-##                ppl_proc = subprocess.Popen(
-##                    ["pplain", fbfile],
-##                    stdout=subprocess.PIPE)
-##                print(fbfile)   
-##				
-##                lm = audiolabel.LabelManager(
-##                   from_file=ppl_proc.stdout,   # read directly from pplain output
-##                   from_type='table',
-##                   sep=" ",
-##                   fields_in_head=False,
-##                   fields="f1,f2,f3,f4",
-##                   t1_col=None,                 # esps output doesn't have a t1 column
-##                   t1_start=0.0,          # autocreate t1 starting with this value and
-##                   t1_step=0.01)             # increase by this step
-##                f3 = lm.tier('f3')
-##                f2 = lm.tier('f2')
-##                f1 = lm.tier('f1')
-##                framef3 = (f3.label_at(frmtime)).text
-##	#            if float(framef3) > 2300:
-##	#                framef3 = "NA"
-##                framef2 = (f2.label_at(frmtime)).text
-##                framef1 = (f1.label_at(frmtime)).text
-##		#        row_out = '\t'.join([str(i),str(a.timestamp), str(val), str(meas_t1), framef2, framef3, str(indx), str(len(mindiffs))])
-##		#        out.write(row_out+'\n')            
-##                frmf3.append(framef3)
-##                frmf2.append(framef2)
-##                frmf1.append(framef1)
-##
-##            else:
 	# ok now we append a placeholder to anything that wouldn't otherwise get defined:
 	# frame no
 	# spca doesn't need to because we used tindx
@@ -210,6 +188,7 @@ for dirs, times, files in os.walk(subbmpdir):
                 frmf3.append('NULL')
                 frmf2.append('NULL')
                 frmf1.append('NULL')
+             
                             
 print(len(spca))
 
