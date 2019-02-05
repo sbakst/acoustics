@@ -83,7 +83,7 @@ for dirs, times, files in os.walk(subbmpdir):
         stimfile = os.path.join(utt, 'stim.txt')
         stim = open(stimfile)
         stimtext = stim.read()
-        print (stimtext)
+        # print (stimtext)
         stimulus.append(str(stimtext))
         if any(substring in stimtext for substring in WORDS): 
             tg = os.path.join(utt,(timestamp+'.TextGrid')) # may need to change to just TextGrid depending on when data is from
@@ -92,7 +92,7 @@ for dirs, times, files in os.walk(subbmpdir):
                 tg = os.path.join(utt,(timestamp+'.bpr.ch1.TextGrid'))
             if not os.path.isfile(wav):
                 wav = os.path.join(utt,(timestamp+'.bpr.ch1.wav')) # may need to change to bpr.ch1.wav depending on when data is from
-            print(wav)
+            # print(wav)
             # syncfile = os.path.join(utt,(timestamp+'.bpr.sync.txt'))
        #     if not syncfile:
        #         continue
@@ -114,7 +114,7 @@ for dirs, times, files in os.walk(subbmpdir):
             stimex = re.compile(stimtext) 
             bmpdir = os.path.join(subbmpdir, timestamp)
             imlist = [i for i in os.listdir(bmpdir) if (subjsframelist.search(i) and not regex.search(i) and not stimex.search(i))]
-            print(imlist)
+            # print(imlist)
             try:
                 im = np.array(Image.open(os.path.join(bmpdir,(imlist[0])))) #open one image to get the size
             except IndexError as e:
@@ -125,20 +125,23 @@ for dirs, times, files in os.walk(subbmpdir):
 #                frmtimes.append('NA')
 #                continue 
                 q,s = im.shape[0:2] #get the size of the images
-                print(q)
-                print(s)
+                # print(q)
+                # print(s)
                 imnbr = len(imlist) #get the number of images
-                print(imnbr)
+                # print(imnbr)
                 if spca is None:
                     spca = np.empty([len(os.listdir(subbmpdir))]+list(im.shape[0:2])) * np.nan
                 difflist = []
                 for i in range(imnbr):
-                    print(i)
-                    print(imlist[i])
-                    print(os.path.join(bmpdir,imlist[i]))
+                    # print(i)
+                    # print(imlist[i])
+                    # print(os.path.join(bmpdir,imlist[i]))
                     bmpnorm = np.linalg.norm(np.array(Image.open(os.path.join(bmpdir, imlist[i]))))
+                    print(bmpnorm)
                     if bmpnorm > 25000:
+                        print("I'm your biggest fan")
                         continue
+                    print("not a fan")
   #                  call(["convert", os.path.join(utt,imlist[i]), "-set", "colorspace", "RGB", os.path.join(utt,imlist[i])])
   #                  call(["convert", os.path.join(utt,imlist[i]), "-set", "colorspace", "Gray", os.path.join(utt,imlist[i])])
                     if i > 0:
@@ -148,16 +151,16 @@ for dirs, times, files in os.walk(subbmpdir):
                         else:
                             difflist.append('NA')
          	        # identify frame where the difference in tongue shape is lowest.
-                print(difflist)
+                # print(difflist)
                 min_val, min_idx = min((val,idx) for (idx, val) in enumerate(difflist))
-                print(min_val)
-                print(min_idx)
+                # print(min_val)
+                # print(min_idx)
 	               # add frame to array
                 frame_n = imlist[min_idx]
-                print(frame_n)
+                # print(frame_n)
      
                 frame_number = os.path.splitext(os.path.splitext(frame_n)[0])[1][1:] # actual frame number, not INDEX
-#                print(frame_number)
+                print(frame_number)
                 framenos.append(frame_number)
                 openframe = np.array(Image.open(os.path.join(bmpdir,frame_n)))
                 mysframe = ndimage.median_filter(openframe,5)
@@ -170,14 +173,15 @@ for dirs, times, files in os.walk(subbmpdir):
             #    sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',sep = '\t',fields_in_head=True)# False, fields='t1,frameidx')
            # else:
             sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',sep = '\t',fields_in_head=False, fields='t1,frameidx')
-            print(sm)
-            meanfrm = sm.tier('frameidx').label_at(st_frmtime).text
-            print(meanfrm - frame_number) #compare midpoint from subtraction method; make this into a list that we can look at later
+#            print(sm)
+            meanfrm = int(sm.tier('frameidx').label_at(st_frmtime).text)
+            print('THE DIFFERENCE')
+            print(meanfrm - int(frame_number)) #compare midpoint from subtraction method; make this into a list that we can look at later
             for v,m in sm.tier('frameidx').search(frame_number, return_match=True):
-                print(v)
+                # print(v)
                 #if int(args.subject) > 120: 
                 frmtime = v.t1
-                print(frmtime)
+                # print(frmtime)
                 frmtimes.append(frmtime)
 	# ok now we append a placeholder to anything that wouldn't otherwise get defined:
 	# frame no
@@ -190,7 +194,7 @@ for dirs, times, files in os.walk(subbmpdir):
                 frmf1.append('NULL')
              
                             
-print(len(spca))
+# print(len(spca))
 
 
 
@@ -210,11 +214,11 @@ frmf2 = np.squeeze(np.array(frmf2))
 frmf1 = np.squeeze(np.array(frmf1))
 
 
-print(spca)
+# print(spca)
 
 
 keep_indices = np.where(~np.isnan(spca).any(axis=(1,2)))[0]
-print(keep_indices)
+# print(keep_indices)
 
 kept_spca = spca[keep_indices]
 kept_framenos = framenos[keep_indices]
@@ -238,7 +242,7 @@ for double in combinations(spca_seq,2):
     raw_list.append(rawdiff)
     norm_list.append(normdiff)
     normalized_list.append(normalizeddiff)
-    print(double)
+    # print(double)
 norm_avg = np.mean(norm_list)
 normalized_avg = np.mean(normalized_list)
 sd_norm = np.std(norm_list)
@@ -269,9 +273,9 @@ if args.pca:
     
     pca = PCA(n_components = n_components)
     
-    print(kept_spca.shape[0]) # 48ish?
-    print(kept_spca.shape[1]) # q?
-    print(kept_spca.shape[2]) # s?
+    # print(kept_spca.shape[0]) # 48ish?
+    # print(kept_spca.shape[1]) # q?
+    # print(kept_spca.shape[2]) # s?
     
     
     frames_reshaped = kept_spca.reshape([kept_spca.shape[0], kept_spca.shape[1]*kept_spca.shape[2]])
@@ -287,16 +291,16 @@ if args.pca:
     meta_headers = ["timestamp","framenum","f1","f2","f3"]
     pc_headers = ["pc"+str(i+1) for i in range(0,n_components)] # determine number of PC columns; changes w.r.t. n_components
     headers = meta_headers + pc_headers
-    print(analysis)
-    print(headers)
+    # print(analysis)
+    # print(headers)
     #print('covariance' + covariance)
     
     #print(kept_stimulus)
-    print(kept_ts)
-    print(kept_framenos)
-    print(kept_f1)
-    print(kept_f2)
-    print(kept_f3)
+    # print(kept_ts)
+    # print(kept_framenos)
+    # print(kept_f1)
+    # print(kept_f2)
+    # print(kept_f3)
     
     outfile = os.path.join(subbmpdir, 'pca.csv')
     d = np.row_stack((headers,np.column_stack((kept_ts,kept_framenos,kept_f1,kept_f2,kept_f3,analysis))))
