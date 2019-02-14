@@ -177,6 +177,7 @@ for dirs, times, files in os.walk(subbmpdir):
             meanfrm = int(sm.tier('frameidx').label_at(st_frmtime).text)
             print('THE DIFFERENCE')
             print(meanfrm - int(frame_number)) #compare midpoint from subtraction method; make this into a list that we can look at later
+#            for v,m in sm.tier('frameidx').search(str(meanfrm), return_match=True):
             for v,m in sm.tier('frameidx').search(frame_number, return_match=True):
                 # print(v)
                 #if int(args.subject) > 120: 
