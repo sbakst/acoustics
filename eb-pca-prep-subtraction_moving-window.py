@@ -280,8 +280,8 @@ for rf in glob.glob(rawfile_glob_exp):
 
 #        prebuf = 12
 #        postbuf = 4
-        prebufs = [7, 6, 5, 4]
-        postbufs = [3, 4, 5, 6]
+        prebufs = [10, 9, 8, 7]
+        postbufs = [-2, -1, 0, 1]
 
         frameperc = int(last_idx * midperc)
         print(frameperc)
@@ -301,9 +301,9 @@ for rf in glob.glob(rawfile_glob_exp):
     #        subtrahend = get_frame(rf, f, myframesize, med_filter = True)
             rdr = RawReader(rf, nscanlines=nscanlines, npoints=npoints) # or whatever the appropriate parameters actually are
             minuend = rdr.get_frame(f+1)
-            minuend = ndimage.median_filter(minuend, 3)
+#            minuend = ndimage.median_filter(minuend, 3)
             subtrahend = rdr.get_frame(f)
-            subtrahend = ndimage.median_filter(subtrahend, 3)
+#            subtrahend = ndimage.median_filter(subtrahend, 3)
             cdiff = minuend-subtrahend
             cdiffnorm = np.linalg.norm(cdiff)
             consec_diffs.append(cdiffnorm)
@@ -320,8 +320,8 @@ for rf in glob.glob(rawfile_glob_exp):
     maxi, maxidind = max((val,idx) for (idx,val) in enumerate(rlframes))
     indsdiff = maxi-mini
     rl_frame_idx = mini
-    if (indsdiff > 6) or ((0 < (maxi-frameperc) < 3) and indsdiff != 0) : #(midperc-mini)):
-        print('\n check ' + trial + '\n')
+    if indsdiff != 0: #(indsdiff > 6) or ((0 < (maxi-frameperc) < 3) and indsdiff != 0) : #(midperc-mini)):
+        print('\n check ' + os.path.basename(barename) + '\n')
 
         class Header(object):
             def __init__(self):
@@ -347,19 +347,23 @@ for rf in glob.glob(rawfile_glob_exp):
 #        rdr = RawReader(rf, nscanlines=nscanlines, npoints = npoints)
         print(rf)
         for f in np.arange((frameperc-10),(frameperc+2)):
-            d = rdr.get_frame(f).reshape(image_shape)
-            d = ndimage.median_filter(d, 3)
-            mag = np.max(d) - np.min(d)
-            d = (d-np.min(d))/mag*255
-            pcn = np.flipud(c.as_bmp(np.flipud(d)))
-            #pcn = c.as_bmp(d)
-            plt.title("Frame{:}, Subj. {:}".format((f+1),subject))
-            plt.imshow(pcn, cmap="Greys_r")
             file_ending = "subj{:}-{:}.png".format(subject, (f+1))
             ultradir = os.path.join(os.path.basename(barename),file_ending)
             savepath = os.path.join(expdir,ultradir)
-            print(savepath)
-            plt.savefig(savepath)
+            if not os.path.exists(savepath):
+                d = rdr.get_frame(f).reshape(image_shape)
+#                d = ndimage.median_filter(d, 3)
+                mag = np.max(d) - np.min(d)
+                d = (d-np.min(d))/mag*255
+                pcn = np.flipud(c.as_bmp(np.flipud(d)))
+                #pcn = c.as_bmp(d)
+                plt.title("Frame{:}, Subj. {:}".format((f+1),subject))
+                plt.imshow(pcn, cmap="Greys_r")
+    #            file_ending = "subj{:}-{:}.png".format(subject, (f+1))
+    #            ultradir = os.path.join(os.path.basename(barename),file_ending)
+    #            savepath = os.path.join(expdir,ultradir)
+                print(savepath)
+                plt.savefig(savepath)
         rl_frame_idx = int(input('\n \n select a frame number for ' + subject + ' trial ' + trial + '\n' + 'the length of the vowel was ' +  str(float(vlen)) + ' or about' + str(float(vlen/17)) + ' frames.'))             
 #        it is the same frame as idx because the frame number IS the index (frame numbering starts at 0)
 #        rl_frame_idx = frameno-1

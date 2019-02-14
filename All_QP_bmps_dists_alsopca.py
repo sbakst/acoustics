@@ -76,7 +76,7 @@ for dirs, times, files in os.walk(train):
             wav = os.path.join(utt,(timestamp+'bpr.ch1.wav')) # may need to change to bpr.ch1.wav depending on when data is from
                 if not wav:
                     wav = os.path.join(utt,(timestamp+'.wav'))
-            syncfile = os.path.join(utt,(timestamp+'.bpr.sync.txt'))
+            # syncfile = os.path.join(utt,(timestamp+'.bpr.sync.txt'))
        #     if not syncfile:
        #         continue
             subjrframelist = re.compile('.*\.jpg')
