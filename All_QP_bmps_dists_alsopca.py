@@ -63,7 +63,7 @@ frmf1 = []
 # First, for each directory of bmps, read in the stim.txt.
 
 rpca = None
-
+mrpca = None
 
 
 for dirs, times, files in os.walk(subbmpdir):
@@ -96,6 +96,16 @@ for dirs, times, files in os.walk(subbmpdir):
             # syncfile = os.path.join(utt,(timestamp+'.bpr.sync.txt'))
        #     if not syncfile:
        #         continue
+
+            # get midpoint time
+            pm = audiolabel.LabelManager(from_file = tg, from_type = 'praat')
+            for lab in pm.tier('phone') :
+                if (re.match('R',lab.text)) :
+                    label = lab.text
+                    rt1 = lab.t1
+                    rt2 = lab.t2
+                    rt_frmtime = ((rt1 + rt2)/2)
+
             subjrframelist = re.compile('.*\.jpg')
             regex = re.compile('(pc[0-9])|(mean).jpg')
             stimex = re.compile(stimtext) 
@@ -118,6 +128,8 @@ for dirs, times, files in os.walk(subbmpdir):
                 print(imnbr)
                 if rpca is None:
                     rpca = np.empty([len(os.listdir(subbmpdir))]+list(im.shape[0:2])) * np.nan
+                if mrpca is None:
+                    mrpca = np.empty([len(os.listdir(subbmpdir))]+list(im.shape[0:2])) * np.nan
                 difflist = []
                 for i in range(imnbr):
                     print(i)
@@ -151,6 +163,19 @@ for dirs, times, files in os.walk(subbmpdir):
                 print(myrframe)
                 rpca[tindex,:,:] = myrframe
                 print(syncfile)
+
+                    
+                try:
+                    sm = audiolabel.LabelManager(from_file = syncfile, from_type = 'table', sep = '\t', fields_in_head = False, fields - 't1,frameidx')
+                    rmidfrm = int(sm.tier('frameidx').label_at(rt_frmtime).text)
+                except ValueError:
+                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='table',sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
+                    rmidfrm = int(sm.tier('raw_data_idx').label_at(rt_frmtime).text)
+                framename = timestamp + '.' + str(rmidfrm) + '.jpg'
+                openframe = np.array(Image.open(os.path.join(bmpdir,framename)))
+                myrframe = ndimage.median_filter(openframe,5)
+                mrpca[tindex,:,:] = myrframe
+
 
 		# do the acoustics: find timepoint (time) in file where that frame occurs using the syncfile
            # if int(args.subject) > 120: # change in syncfile format
@@ -270,11 +295,63 @@ sd_normalized = np.std(normalized_list)
 #print(norm_list)
 
 
+# now we are going to take all the differences using midpoint frames.
+mid_raw_list=[]
+mid_norm_list = []
+mid_normalized_list = []
+
+
+mrpca = np.squeeze(mrpca)
+#mframenos = np.squeeze(np.array(mframenos))
+#ts = np.squeeze(np.array(mts))
+#frmtimes = np.squeeze(np.array(frmtimes))
+#frmf3 = np.squeeze(np.array(frmf3))
+#frmf2 = np.squeeze(np.array(frmf2))
+#frmf1 = np.squeeze(np.array(frmf1))
+# deal with acoustics later
+
+
+print(mrpca)
+
+mid_keep_indices = np.where(~np.isnan(mrpca).any(axis=(1,2)))[0]
+print(mid_keep_indices)
+
+kept_mrpca = mrpca[mid_keep_indices]
+#kept_framenos = framenos[keep_indices]
+#kept_ts = ts[keep_indices]
+#kept_frmtimes = frmtimes[keep_indices] # when the frame occurs from sync.txt
+#kept_stimulus = np.array(stimulus,str)[keep_indices] # stimulus word
+#kept_f3 = frmf3[keep_indices]
+#kept_f2 = frmf2[keep_indices]
+#kept_f1 = frmf1[keep_indices]
+
+mid_subavg = np.linalg.norm(np.mean(kept_mrpca,axis=0))# find average along axis 0
+
+mrpca_seq = list(range((len(kept_mrpca)-1)))
+
+for double in combinations(mrpca_seq,2):
+    minuend = double[0]
+    subtrahend = double[1]    
+    rawdiff = kept_mrpca[minuend,:,:]-kept_mrpca[subtrahend,:,:]
+    normdiff = np.linalg.norm(rawdiff)
+    normalizeddiff = normdiff/subavg
+    mid_raw_list.append(rawdiff)
+    mid_norm_list.append(normdiff)
+    mid_normalized_list.append(normalizeddiff)
+    print(double)
+mid_norm_avg = np.mean(mid_norm_list)
+mid_normalized_avg = np.mean(mid_normalized_list)
+mid_sd_norm = np.std(mid_norm_list)
+mid_sd_normalized = np.std(mid_normalized_list)
+
+
+
 outdiffs = os.path.join(subbmpdir,'r_diffs.txt')
+# middiffs = os.path.join(subbmpdir,'r_middiffs.txt')
 
 od = open(outdiffs, 'w')
-od.write('\t'.join(['subject','norm_avg','normalized_avg','sd_norm','sd_normalized'])+'\n')
-od.write('\t'.join([args.subject,str(norm_avg),str(normalized_avg),str(sd_norm),str(sd_normalized)])+'\n')
+od.write('\t'.join(['subject','norm_avg','normalized_avg','sd_norm','sd_normalized','mid_norm_avg','mid_normalized_avg','mid_sd_norm','mid_normalized'])+'\n')
+od.write('\t'.join([args.subject,str(norm_avg),str(normalized_avg),str(sd_norm),str(sd_normalized)]),str(mid_norm_avg),str(mid_normalized_avg),str(mid_sd_norm),str(mid_sd_normalized)+'\n')
 #f.write(str(covariance))
 od.close()
 
