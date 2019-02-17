@@ -105,7 +105,6 @@ for dirs, times, files in os.walk(subbmpdir):
                     rt1 = lab.t1
                     rt2 = lab.t2
                     rt_frmtime = ((rt1 + rt2)/2)
-
             subjrframelist = re.compile('.*\.jpg')
             regex = re.compile('(pc[0-9])|(mean).jpg')
             stimex = re.compile(stimtext) 
@@ -141,8 +140,8 @@ for dirs, times, files in os.walk(subbmpdir):
   #                  call(["convert", os.path.join(utt,imlist[i]), "-set", "colorspace", "RGB", os.path.join(utt,imlist[i])])
   #                  call(["convert", os.path.join(utt,imlist[i]), "-set", "colorspace", "Gray", os.path.join(utt,imlist[i])])
                     if i > 0:
-                        diffmatrix = np.array(Image.open(os.path.join(bmpdir,imlist[i])))-np.array(Image.open(os.path.join(bmpdir,imlist[i-1]))
-                        if np.linalg.norm(diffmatrix) > 0):
+                        diffmatrix = np.array(Image.open(os.path.join(bmpdir,imlist[i])))-np.array(Image.open(os.path.join(bmpdir,imlist[i-1])))
+                        if (np.linalg.norm(diffmatrix)) > 0:
                             difflist.append(np.linalg.norm(diffmatrix))
                         else:
                             difflist.append('NA')
@@ -163,79 +162,83 @@ for dirs, times, files in os.walk(subbmpdir):
                 print(myrframe)
                 rpca[tindex,:,:] = myrframe
                 print(syncfile)
-
                     
                 try:
-                    sm = audiolabel.LabelManager(from_file = syncfile, from_type = 'table', sep = '\t', fields_in_head = False, fields - 't1,frameidx')
+                    sm = audiolabel.LabelManager(from_file = syncfile, from_type = 'table', sep = '\t', fields_in_head = False, fields = 't1,frameidx')
                     rmidfrm = int(sm.tier('frameidx').label_at(rt_frmtime).text)
                 except ValueError:
-                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='table',sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
-                    rmidfrm = int(sm.tier('raw_data_idx').label_at(rt_frmtime).text)
+                    syncfile = os.path.join(utt, (timestamp + '.bpr.sync.TextGrid'))
+                    print(syncfile)
+                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='praat')#,sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
+#                    print(sm)
+                    rmidfrm = int(sm.tier('pulse_idx').label_at(rt_frmtime).text)
                 framename = timestamp + '.' + str(rmidfrm) + '.jpg'
+                if not os.path.isfile(os.path.join(bmpdir,framename)):
+                    framename = timestamp + '.' + str(rmidfrm - 1) + '.jpg'
                 openframe = np.array(Image.open(os.path.join(bmpdir,framename)))
                 myrframe = ndimage.median_filter(openframe,5)
                 mrpca[tindex,:,:] = myrframe
 
 
 		# do the acoustics: find timepoint (time) in file where that frame occurs using the syncfile
-           # if int(args.subject) > 120: # change in syncfile format
-            #    sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',sep = '\t',fields_in_head=True)# False, fields='t1,frameidx')
-           # else:
-            sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',sep = '\t',fields_in_head=False, fields='t1,frameidx')
-            print(sm)
-            for v,m in sm.tier('frameidx').search(frame_number, return_match=True):
-                print(v)
-                #if int(args.subject) > 120: 
-                frmtime = v.t1
-                print(frmtime)
-                frmtimes.append(frmtime)
-		# oh, christ. Perform rformant and get F1/F2/F3 at frmtime. But let's stop here for now.
-                fbfile = (os.path.splitext(wav)[0]+'.fb') # make fbfile name that rformant will write to
-
-                try:
-                    formant_proc = subprocess.check_call(["rformant", wav])#, stdin=rdc_proc.stdout) # also remove 20
-                except subprocess.CalledProcessError as e:
-                    print(e)
-                    print(e.stdout)
-                ppl_proc = subprocess.Popen(
-                    ["pplain", fbfile],
-                    stdout=subprocess.PIPE)
-                print(fbfile)   
-				
-                lm = audiolabel.LabelManager(
-                   from_file=ppl_proc.stdout,   # read directly from pplain output
-                   from_type='table',
-                   sep=" ",
-                   fields_in_head=False,
-                   fields="f1,f2,f3,f4",
-                   t1_col=None,                 # esps output doesn't have a t1 column
-                   t1_start=0.0,          # autocreate t1 starting with this value and
-                   t1_step=0.01)             # increase by this step
-                f3 = lm.tier('f3')
-                f2 = lm.tier('f2')
-                f1 = lm.tier('f1')
-                framef3 = (f3.label_at(frmtime)).text
-	#            if float(framef3) > 2300:
-	#                framef3 = "NA"
-                framef2 = (f2.label_at(frmtime)).text
-                framef1 = (f1.label_at(frmtime)).text
-		#        row_out = '\t'.join([str(i),str(a.timestamp), str(val), str(meas_t1), framef2, framef3, str(indx), str(len(mindiffs))])
-		#        out.write(row_out+'\n')            
-                frmf3.append(framef3)
-                frmf2.append(framef2)
-                frmf1.append(framef1)
-
-            else:
-	# ok now we append a placeholder to anything that wouldn't otherwise get defined:
-	# frame no
-	# rpca doesn't need to because we used tindx
-	# frmtimes
-                framenos.append('NULL')
-                frmtimes.append('NULL')
-                frmf3.append('NULL')
-                frmf2.append('NULL')
-                frmf1.append('NULL')
-                            
+#            if int(args.subject) > 120: # change in syncfile format
+#                sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',sep = '\t',fields_in_head=True)# False, fields='t1,frameidx')
+#            else:
+#                sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',sep = '\t',fields_in_head=False, fields='t1,frameidx')
+#            print(sm)
+# uncomment these for audio            for v,m in sm.tier('frameidx').search(frame_number, return_match=True):
+# uncomment these for audio                print(v)
+# uncomment these for audio                #if int(args.subject) > 120: 
+# uncomment these for audio                frmtime = v.t1
+# uncomment these for audio                print(frmtime)
+# uncomment these for audio                frmtimes.append(frmtime)
+# uncomment these for audio		# oh, christ. Perform rformant and get F1/F2/F3 at frmtime. But let's stop here for now.
+# uncomment these for audio                fbfile = (os.path.splitext(wav)[0]+'.fb') # make fbfile name that rformant will write to
+# uncomment these for audio
+# uncomment these for audio                try:
+# uncomment these for audio                    formant_proc = subprocess.check_call(["rformant", wav])#, stdin=rdc_proc.stdout) # also remove 20
+# uncomment these for audio                except subprocess.CalledProcessError as e:
+# uncomment these for audio                    print(e)
+# uncomment these for audio                    print(e.stdout)
+# uncomment these for audio                ppl_proc = subprocess.Popen(
+# uncomment these for audio                    ["pplain", fbfile],
+# uncomment these for audio                    stdout=subprocess.PIPE)
+# uncomment these for audio                print(fbfile)   
+# uncomment these for audio				
+# uncomment these for audio                lm = audiolabel.LabelManager(
+# uncomment these for audio                   from_file=ppl_proc.stdout,   # read directly from pplain output
+# uncomment these for audio                   from_type='table',
+# uncomment these for audio                   sep=" ",
+# uncomment these for audio                   fields_in_head=False,
+# uncomment these for audio                   fields="f1,f2,f3,f4",
+# uncomment these for audio                   t1_col=None,                 # esps output doesn't have a t1 column
+# uncomment these for audio                   t1_start=0.0,          # autocreate t1 starting with this value and
+# uncomment these for audio                   t1_step=0.01)             # increase by this step
+# uncomment these for audio                f3 = lm.tier('f3')
+# uncomment these for audio                f2 = lm.tier('f2')
+# uncomment these for audio                f1 = lm.tier('f1')
+# uncomment these for audio                framef3 = (f3.label_at(frmtime)).text
+# uncomment these for audio	#            if float(framef3) > 2300:
+# uncomment these for audio	#                framef3 = "NA"
+# uncomment these for audio                framef2 = (f2.label_at(frmtime)).text
+# uncomment these for audio                framef1 = (f1.label_at(frmtime)).text
+# uncomment these for audio		#        row_out = '\t'.join([str(i),str(a.timestamp), str(val), str(meas_t1), framef2, framef3, str(indx), str(len(mindiffs))])
+# uncomment these for audio		#        out.write(row_out+'\n')            
+# uncomment these for audio                frmf3.append(framef3)
+# uncomment these for audio                frmf2.append(framef2)
+# uncomment these for audio                frmf1.append(framef1)
+# uncomment these for audio
+# uncomment these for audio            else:
+# uncomment these for audio	# ok now we append a placeholder to anything that wouldn't otherwise get defined:
+# uncomment these for audio	# frame no
+# uncomment these for audio	# rpca doesn't need to because we used tindx
+# uncomment these for audio	# frmtimes
+# uncomment these for audio                framenos.append('NULL')
+# uncomment these for audio                frmtimes.append('NULL')
+# uncomment these for audio                frmf3.append('NULL')
+# uncomment these for audio                frmf2.append('NULL')
+# uncomment these for audio                frmf1.append('NULL')
+# uncomment these for audio                            
 print(len(rpca))
 
 
@@ -250,10 +253,10 @@ normalized_list = []
 rpca = np.squeeze(rpca)
 framenos = np.squeeze(np.array(framenos))
 ts = np.squeeze(np.array(ts))
-frmtimes = np.squeeze(np.array(frmtimes))
-frmf3 = np.squeeze(np.array(frmf3))
-frmf2 = np.squeeze(np.array(frmf2))
-frmf1 = np.squeeze(np.array(frmf1))
+# frmtimes = np.squeeze(np.array(frmtimes))
+# frmf3 = np.squeeze(np.array(frmf3))
+# frmf2 = np.squeeze(np.array(frmf2))
+# frmf1 = np.squeeze(np.array(frmf1))
 
 
 print(rpca)
@@ -263,13 +266,13 @@ keep_indices = np.where(~np.isnan(rpca).any(axis=(1,2)))[0]
 print(keep_indices)
 
 kept_rpca = rpca[keep_indices]
-kept_framenos = framenos[keep_indices]
-kept_ts = ts[keep_indices]
-kept_frmtimes = frmtimes[keep_indices] # when the frame occurs from sync.txt
-kept_stimulus = np.array(stimulus,str)[keep_indices] # stimulus word
-kept_f3 = frmf3[keep_indices]
-kept_f2 = frmf2[keep_indices]
-kept_f1 = frmf1[keep_indices]
+# kept_framenos = framenos[keep_indices]
+# kept_ts = ts[keep_indices]
+# kept_frmtimes = frmtimes[keep_indices] # when the frame occurs from sync.txt
+# kept_stimulus = np.array(stimulus,str)[keep_indices] # stimulus word
+# kept_f3 = frmf3[keep_indices]
+# kept_f2 = frmf2[keep_indices]
+# kept_f1 = frmf1[keep_indices]
 
 subavg = np.linalg.norm(np.mean(kept_rpca,axis=0))# find average along axis 0
 
@@ -351,7 +354,7 @@ outdiffs = os.path.join(subbmpdir,'r_diffs.txt')
 
 od = open(outdiffs, 'w')
 od.write('\t'.join(['subject','norm_avg','normalized_avg','sd_norm','sd_normalized','mid_norm_avg','mid_normalized_avg','mid_sd_norm','mid_normalized'])+'\n')
-od.write('\t'.join([args.subject,str(norm_avg),str(normalized_avg),str(sd_norm),str(sd_normalized)]),str(mid_norm_avg),str(mid_normalized_avg),str(mid_sd_norm),str(mid_sd_normalized)+'\n')
+od.write('\t'.join([args.subject,str(norm_avg),str(normalized_avg),str(sd_norm),str(sd_normalized),str(mid_norm_avg),str(mid_normalized_avg),str(mid_sd_norm),str(mid_sd_normalized)])+'\n')
 #f.write(str(covariance))
 od.close()
 
