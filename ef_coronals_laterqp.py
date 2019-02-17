@@ -30,7 +30,7 @@ SUB = sys.argv[3]
 w = open(WORDFILE)
 WORDS = str.split(w.read(),"\n")
 tarlist = []
-tarlist =['S']
+tarlist =['R']
 
 #subjects = [d for d in os.listdir(PARENTDIR) if os.path.isdir(os.path.join(PARENTDIR,d))]
 
@@ -66,7 +66,7 @@ for a in e.acquisitions:
    print (fname)
    pm = audiolabel.LabelManager(from_file = outfile, from_type='praat')
    for plab in pm.tier('phone') :
-      if plab.text == 'S' : 
+      if plab.text == 'R' : 
          print (plab.text)
          frt1 = plab.t1
 #         print frt1
