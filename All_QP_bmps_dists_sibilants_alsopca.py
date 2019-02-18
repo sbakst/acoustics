@@ -63,7 +63,7 @@ frmf1 = []
 # First, for each directory of bmps, read in the stim.txt.
 
 spca = None
-
+mspca = None
 
 
 for dirs, times, files in os.walk(subbmpdir):
@@ -131,6 +131,9 @@ for dirs, times, files in os.walk(subbmpdir):
                 # print(imnbr)
                 if spca is None:
                     spca = np.empty([len(os.listdir(subbmpdir))]+list(im.shape[0:2])) * np.nan
+                if mspca is None:
+                    mspca = np.empty([len(os.listdir(subbmpdir))]+list(im.shape[0:2])) * np.nan
+                    
                 difflist = []
                 for i in range(imnbr):
                     # print(i)
