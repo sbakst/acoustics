@@ -31,7 +31,7 @@ subjects = [d for d in os.listdir(PARENTDIR) if os.path.isdir(os.path.join(PAREN
 # logfile = "./log_"+ts+".txt"
 # log = open(logfile,'wb')
 
-for s in np.arange(120,121) : # loop over all subjects; used to say for s in range(0,len(subjects))
+for s in [102] : #np.arange(120,121) : # loop over all subjects; used to say for s in range(0,len(subjects))
 #for s in [104, 105, 108, 110, 112, 113, 114, 115, 116, 117, 118, 119, 120]:
     subject = str(s) # str(subjects[s]) 
     DIR = os.path.join(PARENTDIR,subject)

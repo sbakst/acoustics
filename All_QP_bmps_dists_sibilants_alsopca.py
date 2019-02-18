@@ -167,16 +167,31 @@ for dirs, times, files in os.walk(subbmpdir):
 #                print(mysframe)
                 spca[tindex,:,:] = mysframe
 #                print(syncfile)
-
+                try:
+                    sm = audiolabel.LabelManager(from_file = syncfile, from_type = 'table', sep = '\t', fields_in_head = False, fields = 't1,frameidx')
+                    smidfrm = int(sm.tier('frameidx').label_at(st_frmtime).text)
+                except ValueError:
+                    syncfile = os.path.join(utt, (timestamp + '.bpr.sync.TextGrid'))
+                    # print(syncfile)
+                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='praat')#,sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
+#                    print(sm)
+                    smidfrm = int(sm.tier('pulse_idx').label_at(st_frmtime).text)
+                framename = timestamp + '.' + str(rmidfrm) + '.jpg'
+                if not os.path.isfile(os.path.join(bmpdir,framename)):
+                    framename = timestamp + '.' + str(smidfrm - 1) + '.jpg'
+                openframe = np.array(Image.open(os.path.join(bmpdir,framename)))
+                mysframe = ndimage.median_filter(openframe,5)
+                mspca[tindex,:,:] = mysframe
+                
 		# do the acoustics: find timepoint (time) in file where that frame occurs using the syncfile
            # if int(args.subject) > 120: # change in syncfile format
             #    sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',sep = '\t',fields_in_head=True)# False, fields='t1,frameidx')
            # else:
-            sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',sep = '\t',fields_in_head=False, fields='t1,frameidx')
+#            sm = audiolabel.LabelManager(from_file=syncfile, from_type='table',sep = '\t',fields_in_head=False, fields='t1,frameidx')
 #            print(sm)
-            meanfrm = int(sm.tier('frameidx').label_at(st_frmtime).text)
-            print('THE DIFFERENCE')
-            print(meanfrm - int(frame_number)) #compare midpoint from subtraction method; make this into a list that we can look at later
+#            meanfrm = int(sm.tier('frameidx').label_at(st_frmtime).text)
+#            print('THE DIFFERENCE')
+#            print(meanfrm - int(frame_number)) #compare midpoint from subtraction method; make this into a list that we can look at later
 #            for v,m in sm.tier('frameidx').search(str(meanfrm), return_match=True):
             for v,m in sm.tier('frameidx').search(frame_number, return_match=True):
                 # print(v)
@@ -196,7 +211,6 @@ for dirs, times, files in os.walk(subbmpdir):
              
                             
 # print(len(spca))
-
 
 
 

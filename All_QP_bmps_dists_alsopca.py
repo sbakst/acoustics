@@ -121,8 +121,8 @@ for dirs, times, files in os.walk(subbmpdir):
 #                frmtimes.append('NA')
 #                continue 
                 q,s = im.shape[0:2] #get the size of the images
-                print(q)
-                print(s)
+                #print(q)
+                #print(s)
                 imnbr = len(imlist) #get the number of images
                 print(imnbr)
                 if rpca is None:
@@ -131,7 +131,7 @@ for dirs, times, files in os.walk(subbmpdir):
                     mrpca = np.empty([len(os.listdir(subbmpdir))]+list(im.shape[0:2])) * np.nan
                 difflist = []
                 for i in range(imnbr):
-                    print(i)
+                    #print(i)
                     print(imlist[i])
                     print(os.path.join(bmpdir,imlist[i]))
                     bmpnorm = np.linalg.norm(np.array(Image.open(os.path.join(bmpdir, imlist[i]))))
@@ -168,7 +168,7 @@ for dirs, times, files in os.walk(subbmpdir):
                     rmidfrm = int(sm.tier('frameidx').label_at(rt_frmtime).text)
                 except ValueError:
                     syncfile = os.path.join(utt, (timestamp + '.bpr.sync.TextGrid'))
-                    print(syncfile)
+                    # print(syncfile)
                     sm = audiolabel.LabelManager(from_file = syncfile, from_type='praat')#,sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
 #                    print(sm)
                     rmidfrm = int(sm.tier('pulse_idx').label_at(rt_frmtime).text)
@@ -287,7 +287,7 @@ for double in combinations(rpca_seq,2):
     raw_list.append(rawdiff)
     norm_list.append(normdiff)
     normalized_list.append(normalizeddiff)
-    print(double)
+    #print(double)
 norm_avg = np.mean(norm_list)
 normalized_avg = np.mean(normalized_list)
 sd_norm = np.std(norm_list)
@@ -341,7 +341,7 @@ for double in combinations(mrpca_seq,2):
     mid_raw_list.append(rawdiff)
     mid_norm_list.append(normdiff)
     mid_normalized_list.append(normalizeddiff)
-    print(double)
+    #print(double)
 mid_norm_avg = np.mean(mid_norm_list)
 mid_normalized_avg = np.mean(mid_normalized_list)
 mid_sd_norm = np.std(mid_norm_list)
