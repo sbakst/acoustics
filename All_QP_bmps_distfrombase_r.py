@@ -25,15 +25,47 @@ from sklearn import decomposition
 from sklearn.decomposition import PCA
 
 
+# from stackoverflow
+
+def create_circular_mask(h, w, center=None, radius=None, shape = None):
+
+    if center is None: # use the middle of the image
+        center = [int(w/2), int(h/2)]
+    if radius is None: # use the smallest distance between the center and image walls
+        radius = min(center[0], center[1], w-center[0], h-center[1])
+    if shape is None:
+        shape = 'circle'
+
+    Y, X = np.ogrid[:h, :w]
+    dist_from_center = np.sqrt((X - center[0])**2 + (Y-center[1])**2)
+    if shape == 'circle':
+        mask = dist_from_center <= radius
+    elif shape == 'semi':
+        mask = dist_from_center >=radius
+    return mask
+
+#def semi_circ_mask(h, w, center = None, radius = None, side = None):
+#    if center is None:
+#        center = [int(w/2), int(h/2)]
+#    if radius is None: # use the smallest distance between the center and image walls
+#        radius = min(center[0], center[1], w-center[0], h-center[1])
+
+
+    # for hollow mask
+#     mask = dist_from_center >= radius
+#     return mask    
+
+
 
 # this could be made a separate file I read in
 
-WORDS = ['rah', 'rome', 'Rome', 'ream', 'bar', 'bore', 'beer', 'RAH', 'ROME', 'REAM','BAR','BORE','BEER']
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("directory", help="Experiment directory containing all subjects' bmps and jpgs")
 parser.add_argument("otherdir", help="Experiment directory containing all subjects' tgs and sync files and wavs etc")
+parser.add_argument("wordfi", help = "Txt file containing all words to search for")
+parser.add_argument("TARG", help = "target phone in arpabet")
 parser.add_argument("subject", help="subjnumber")
 
 # parser.add_argument("-n", "n_components", help="Number of principal components to output", action="store_true")
@@ -41,6 +73,14 @@ parser.add_argument("-v", "--visualize", help="Produce plots of PC loadings on f
 parser.add_argument("-p", "--pca", help="run pca",action="store_true")
 
 args = parser.parse_args()
+
+wordfi = args.wordfi
+TARG = args.TARG
+
+
+w = open(wordfi)
+WORDS = str.split(w.read(),"\n")
+print(WORDS)
 
 
 # PARENTDIR = sys.argv[1]
@@ -84,15 +124,19 @@ for dirs, times, files in os.walk(subbmpdir):
         stim = open(stimfile)
         stimtext = stim.read()
         print (stimtext)
+        stimmy = stimtext[6:]
+        print(stimmy)
         stimulus.append(str(stimtext))
-        if any(substring in stimtext for substring in WORDS): 
+        if stimmy in WORDS:
+#            print('yay!')
+#        if any(substring in stimtext for substring in WORDS): 
             tg = os.path.join(utt,(timestamp+'.TextGrid')) # may need to change to just TextGrid depending on when data is from
             wav = os.path.join(utt,(timestamp+'.wav'))
             if not os.path.isfile(tg):
                 tg = os.path.join(utt,(timestamp+'.bpr.ch1.TextGrid'))
             if not os.path.isfile(wav):
                 wav = os.path.join(utt,(timestamp+'.bpr.ch1.wav')) # may need to change to bpr.ch1.wav depending on when data is from
-            print(wav)
+            # print(wav)
             # syncfile = os.path.join(utt,(timestamp+'.bpr.sync.txt'))
        #     if not syncfile:
        #         continue
@@ -100,7 +144,8 @@ for dirs, times, files in os.walk(subbmpdir):
             # get midpoint time
             pm = audiolabel.LabelManager(from_file = tg, from_type = 'praat')
             for lab in pm.tier('phone') :
-                if (re.match('R',lab.text)) :
+                if (re.match(TARG,lab.text)) :
+                    print(lab.text)
                     label = lab.text
                     rt1 = lab.t1
                     rt2 = lab.t2
@@ -110,7 +155,7 @@ for dirs, times, files in os.walk(subbmpdir):
             stimex = re.compile(stimtext) 
             bmpdir = os.path.join(subbmpdir, timestamp)
             imlist = [i for i in os.listdir(bmpdir) if (subjrframelist.search(i) and not regex.search(i) and not stimex.search(i))]
-            print(imlist)
+            # print(imlist)
             try:
                 im = np.array(Image.open(os.path.join(bmpdir,(imlist[0])))) #open one image to get the size
             except IndexError as e:
@@ -124,7 +169,7 @@ for dirs, times, files in os.walk(subbmpdir):
                 #print(q)
                 #print(s)
                 imnbr = len(imlist) #get the number of images
-                print(imnbr)
+                # print(imnbr)
                 if rpca is None:
                     rpca = np.empty([len(os.listdir(subbmpdir))]+list(im.shape[0:2])) * np.nan
                 if mrpca is None:
@@ -132,8 +177,8 @@ for dirs, times, files in os.walk(subbmpdir):
                 difflist = []
                 for i in range(imnbr):
                     #print(i)
-                    print(imlist[i])
-                    print(os.path.join(bmpdir,imlist[i]))
+                    # print(imlist[i])
+                    # print(os.path.join(bmpdir,imlist[i]))
                     bmpnorm = np.linalg.norm(np.array(Image.open(os.path.join(bmpdir, imlist[i]))))
                     if bmpnorm > 25000:
                         continue
@@ -253,6 +298,7 @@ normalized_list = []
 rpca = np.squeeze(rpca)
 framenos = np.squeeze(np.array(framenos))
 ts = np.squeeze(np.array(ts))
+
 # frmtimes = np.squeeze(np.array(frmtimes))
 # frmf3 = np.squeeze(np.array(frmf3))
 # frmf2 = np.squeeze(np.array(frmf2))
@@ -266,6 +312,117 @@ keep_indices = np.where(~np.isnan(rpca).any(axis=(1,2)))[0]
 print(keep_indices)
 
 kept_rpca = rpca[keep_indices]
+kept_ts = ts[keep_indices]
+
+# try mask
+
+testframe = kept_rpca[5] # 
+rds = 65 # test radius
+
+success = 0
+while success == 0:
+    h, w = testframe.shape[:2]
+    mask = create_circular_mask(h, w, center = [w/2,h], radius = rds)
+    masked_img = testframe.copy()
+    masked_img[mask] = 0
+    plt.imshow(masked_img, cmap = "Greys_r")
+    plt.show()
+
+    resp = input('Is the mask too big, too small, or juuuuust right? (tb, ts, gdx)')
+    if resp == 'tb':
+        rds = rds - 3
+    elif resp == 'ts':
+        rds = rds + 7
+    elif resp == 'gdx':
+        success = 1
+    print(rds)
+    plt.close()
+
+
+
+for i in range(0,(kept_rpca.shape[0])):
+    maskframe = kept_rpca[i]
+    mask = create_circular_mask(h, w, center = [w/2,h], radius = rds)
+    masked_img = maskframe.copy()
+    masked_img[mask] = 0
+    kept_rpca[i] = masked_img
+
+testframe = kept_rpca[5]
+
+# semi-circular mask
+radius = 180
+success = 0
+while success == 0 :
+    h, w = testframe.shape[:2]
+    mask = create_circular_mask(h, w, center = [s/2,q], radius = radius, shape = 'semi')
+    masked_img = testframe.copy()
+    masked_img[mask] = 0
+    plt.imshow(masked_img, cmap = "Greys_r")
+    plt.show()
+    resp = input('Is the mask too wide, too narrow, or juuuust right?(tw, tn, gdx, sug)')
+    if resp == 'tw':
+        radius = radius - 10
+    elif resp == 'tn':
+        radius = radius + 10
+    elif resp == 'sug':
+        radius = input('Enter a number for the radius. On the screen is ' + str(radius))
+        radius = int(radius)
+    elif resp == 'gdx':
+        success = 1
+    plt.close()
+plt.close()
+print(radius)
+testframe = masked_img
+
+success = 0
+while success == 0:
+    h, w = testframe.shape[:2]
+    mask = create_circular_mask(h, w, center = [s/2, q], radius = radius, shape = 'semi')
+    masked_img = testframe.copy()
+    masked_img[mask] = 0
+    plt.imshow(masked_img, cmap = "Greys_r")
+    plt.show()
+    ht = input('Is the mask too high, too low, or juuust right?(th, tl, gdx, sug)')
+    if ht == 'th':
+       q = q+10
+    elif ht == 'tl':
+        q = q-10
+    elif ht == 'sug':
+        q = input('Enter a number to add to the height; larger = lower. On the screen is ' +str (q))
+        q = int(q)
+    elif ht == 'gdx':
+        success = 1
+
+    plt.close()
+
+
+for i in range(0,(kept_rpca.shape[0])):
+    maskframe = kept_rpca[i]
+    mask = create_circular_mask(h, w, center = [s/2,q], radius = radius, shape = 'semi')
+    masked_img = maskframe.copy()
+    masked_img[mask] = 0
+    if i == 1:
+        plt.imshow(masked_img, cmap = "Greys_r")
+        plt.show()
+    kept_rpca[i] = masked_img
+plt.close()
+# add mask
+# for i in range(0,(kept_rpca.shape[0])):
+#    (kept_rpca)[i][0:50] = 0
+
+# d = (kept_rpca)[4]
+# mag = np.max(d) - np.min(d)
+# d = (d-np.min(d))/mag*255
+#testframe = np.flipud(e.acquisitions[0].image_converter.as_bmp(d)) # converter from any frame will work; here we use the first
+# testframe = Image.fromarray(d,'RGB')
+# testframe.save('lol.jpg')
+
+#plt.title("Did I turn the bottom row to 0?") #.format?
+#plt.imshow(testframe, cmap="Greys_r") 
+#savepath = "a_test_frame_lol.pdf" #.format?
+#plt.savefig(savepath)
+
+
 # kept_framenos = framenos[keep_indices]
 # kept_ts = ts[keep_indices]
 # kept_frmtimes = frmtimes[keep_indices] # when the frame occurs from sync.txt
@@ -377,7 +534,8 @@ mid_sd_normalized = np.std(mid_normalized_list)
 
 
 
-outdiffs = os.path.join(subbmpdir,'r_diffs_frombase.txt')
+outfiname = TARG + '_mask_diffs_frombase.txt'
+outdiffs = os.path.join(subbmpdir, outfiname)
 # middiffs = os.path.join(subbmpdir,'r_middiffs.txt')
 
 od = open(outdiffs, 'w')
@@ -385,6 +543,26 @@ od.write('\t'.join(['subject','norm_avg','normalized_avg','sd_norm','sd_normaliz
 od.write('\t'.join([args.subject,str(norm_avg),str(normalized_avg),str(sd_norm),str(sd_normalized),str(mid_norm_avg),str(mid_normalized_avg),str(mid_sd_norm),str(mid_sd_normalized)])+'\n')
 #f.write(str(covariance))
 od.close()
+
+datafiname = TARG+'_data.txt'
+datafi = os.path.join(subbmpdir, datafiname)
+data_headers = ["timestamp","framenum","normdiff","midnormdiff"] 
+
+
+h = np.row_stack((data_headers,np.column_stack((kept_ts,framenos,norm_list,mid_norm_list))))
+np.savetxt(datafi, h, fmt = "%s", delimiter = ",") 
+
+maskfi = TARG + 'maskparams.txt'
+maskparams = os.path.join(subbmpdir, maskfi)
+mp = open(maskparams, 'w')
+mp.write('\t'.join(['posq','low_radius','high_radius'])+'\n')
+mp.write('\t'.join([str(q), str(rds), str(radius)]))
+mp.close()
+
+
+
+
+print(framenos)
 
 if args.pca:
 ####################################################################################################
