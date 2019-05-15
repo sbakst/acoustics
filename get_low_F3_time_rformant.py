@@ -168,7 +168,10 @@ for dirs, times, files in os.walk(subbmpdir):
                 f3time = vt1_list[f3ind]
                 print(f3_list)
                 f3min = np.min(f3_list)
-                if f3min > 2500:
+                if (stimmy == 'beer' or stimmy == 'ream'):
+                    if f3min > 2400 or f3min < 1500:
+                        f3min = (float('nan'))
+                elif f3min > 2300 or f3min < 1300:
                     f3min = (float('nan'))
                 
                 frmf3.append(f3min)
