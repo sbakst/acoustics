@@ -136,11 +136,192 @@ for index, row in ac_df.iterrows():
     dirjpgs = [i for i in os.listdir(bmpdir) if (subjframelist.search(i)]
     frmind = frmnum - 1
     testinds = [frmind, frmind-1, frmind+1]# one-frame tolerance
-    for t = 1:len(testinds):
-        theframe = dirjpgs[]
-    
-    
-    # check for a bad frame
+    for t in range (0,len(testinds)):
+        thisind = testinds[t]
+        theframe = dirjpgs[thisind]
+        openframe = np.array(Image.open(os.path.join(bmpdir,theframe)))
+        brightness = np.linalg.norm(openframe)
+        if brightness > 25000: # bad frame
+            theframe = float(nan)
+            continue
+        else:
+            break
+    frames[arrind,:,:] = theframe   
+    times.append[ts]
+    stims.append[stim]
+    framenum.append[thisind+1]     
+    arrind = arrind + 1
+
+keep_indices = np.where(~np.isnan(frames).any(axis=(1,2)))[0]
+kept_frames = frames[keep_indices]
+kept_times = times[keep_indices]
+kept_stims = stims[keep_indices]
+kept_framenums = framenums[keep_indices]            
         
+
+# test and add masks
+
+testframe = kept_frames[5]
+rds = 65 # test radius
+cx = w/2 # start center for lower mask
+
+
+# first find lower mask
+success = 0
+while success == 0:
+    h, w = testframe.shape[:2]
+    mask = create_circular_mask(h, w, center = [cx,h], radius = rds)
+    masked_img = testframe.copy()
+    masked_img[mask] = 0
+    plt.imshow(masked_img, cmap = "Greys_r")
+    plt.show()
+# ask opinion upon closing
+    resp = input('Is the mask centered?')
+    if resp == 'y' | if resp == 'gdx':
+        success = 1
+    elif resp 'tr':
+        cx = cx -5
+    elif resp == 'tl':
+        cx = cx + 5
+    elif resp == 'sug':
+        cx = input('Enter an x-coordinate. Currently displayed is ' + str(cx))
         
-        
+success = 0
+while success == 0:
+    h, w = testframe.shape[:2]
+    mask = create_circular_mask(h, w, center = [cx,h], radius = rds)
+    masked_img = testframe.copy()
+    masked_img[mask] = 0
+    plt.imshow(masked_img, cmap = "Greys_r")
+    plt.show()
+    resp = input('Is the mask too big, too small, or juuuuust right? (tb, ts, gdx)')
+    if resp == 'tb':
+        rds = rds - 3
+    elif resp == 'ts':
+        rds = rds + 7
+    elif resp == 'sug':
+        rds = input('Enter a number for the radius. On the screen is ' + str(rds))
+        rds = int(radius)        
+    elif resp == 'gdx':
+        success = 1
+    print(rds)
+    plt.close()
+
+
+# add lower mask to all images
+
+for i in range(0,(kept_frames.shape[0])):
+    maskframe = kept_frames[i]
+    mask = create_circular_mask(h, w, center = [cx,h], radius = rds)
+    masked_img = maskframe.copy()
+    masked_img[mask] = 0
+    kept_frames[i] = masked_img
+
+testframe = kept_frames[5]
+
+# semi-circular upper mask
+radius = 180
+success = 0
+while success == 0 :
+    h, w = testframe.shape[:2]
+    mask = create_circular_mask(h, w, center = [s/2,q], radius = radius, shape = 'semi')
+    masked_img = testframe.copy()
+    masked_img[mask] = 0
+    plt.imshow(masked_img, cmap = "Greys_r")
+    plt.show()
+    resp = input('Is the mask too wide, too narrow, or juuuust right?(tw, tn, gdx, sug)')
+    if resp == 'tw':
+        radius = radius - 10
+    elif resp == 'tn':
+        radius = radius + 10
+    elif resp == 'sug':
+        radius = input('Enter a number for the radius. On the screen is ' + str(radius))
+        radius = int(radius)
+    elif resp == 'gdx':
+        success = 1
+    plt.close()
+plt.close()
+print(radius)
+testframe = masked_img
+
+success = 0
+while success == 0:
+    h, w = testframe.shape[:2]
+    mask = create_circular_mask(h, w, center = [s/2, q], radius = radius, shape = 'semi')
+    masked_img = testframe.copy()
+    masked_img[mask] = 0
+    plt.imshow(masked_img, cmap = "Greys_r")
+    plt.show()
+    ht = input('Is the mask too high, too low, or juuust right?(th, tl, gdx, sug)')
+    if ht == 'th':
+       q = q+10
+    elif ht == 'tl':
+        q = q-10
+    elif ht == 'sug':
+        q = input('Enter a number to add to the height; larger = lower. On the screen is ' +str (q))
+        q = int(q)
+    elif ht == 'gdx':
+        success = 1
+
+    plt.close()
+
+# add semi-circular mask
+for i in range(0,(kept_frames.shape[0])):
+    maskframe = kept_frames[i]
+    mask = create_circular_mask(h, w, center = [s/2,q], radius = radius, shape = 'semi')
+    masked_img = maskframe.copy()
+    masked_img[mask] = 0
+    if i == 1:
+        plt.imshow(masked_img, cmap = "Greys_r")
+        plt.show()
+    kept_frames[i] = masked_img
+plt.close()
+
+# now do the subtraction
+
+# average frame
+avgfrm = np.mean(kept_frams, axis = 0)
+# norm of the average frame
+normavgfrm = np.linalg.norm(avgfrm) # slight digression from original
+
+for i in np.arange(len(kept_frames)):
+    rawdiff = kept_frames[i,:,:] - avgfrm # matrix of difference
+    raw_list.append(rawdiff)
+    normdiff = np.linalg.norm(rawdiff) # norm of matrix of difference
+    norm_list.append(normdiff)
+    normalizeddiff = normdiff/normavgfrm # norm of matrix of difference, normalized by the norm of the mean frame
+    normalized_list.append(normalizeddiff)
+
+# take averages of raw diff before norming
+rawdiff_avg = np.mean(raw_list)
+rawdiff_avg_norm = np.linalg.norm(rawdiff_avg)
+rawdiff_avg_norm_normed = rawdiff_avg_norm/normavgfrm
+
+# norm avg
+norm_avg = np.mean(norm_list)
+# -alized
+normalized_avg = np.mean(normalized_list)
+
+
+outfiname = TARG + '_mask_diffs_frmtime.txt'
+outdiffs = os.path.join(subbmpdir, outfiname)
+od = open(outdiffs, 'w')
+od.write('\t'.join(['subject','norm_avg','normalized_avg','raw_normavg','raw_normavg_normed','avg_brightness'])+'\n')
+od.write('\t'.join([args.subject,str(norm_avg),str(normalized_avg),str(rawdiff_avg_norm),str(rawdiff_avg_norm_normed),str(normavgfrm))+'\n')
+od.close()
+
+# separate file with by-timestamp info
+byfiname = TARG + '_mask_diffs_byts_frmtime.txt'
+byts = os.path.join(subbmpdir, byfiname)
+data_headers = ["timestamp","framenum","normdiff","normeddiff"] 
+b = np.row_stack((data_headers,np.column_stack((kept_ts,kept_framenums,norm_list,normalized_list))))
+np.savetxt(byts,b,fmt="%s",delimiter = ",")
+
+
+# mask params
+maskfi = TARG + 'maskparams.txt'
+maskparams = os.path.join(subbmpdir, maskfi)
+mp = open(maskparams, 'w')
+mp.write('\t'.join(['low_ctr_x','low_radius','high_ctr_y','high_radius'])+'\n')
+mp.write('\t'.join([str(cx), str(rds), str(q),str(radius)]))
+mp.close()
