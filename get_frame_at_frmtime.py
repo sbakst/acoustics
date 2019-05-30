@@ -56,7 +56,7 @@ def create_circular_mask(h, w, center=None, radius=None, shape = None):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("directory", help="Experiment directory containing all subjects' bmps and jpgs")
-parser.add_argument("acoustdif", help="Path to TARGacoustic_data.txt")
+parser.add_argument("acoustdir", help="Path to TARGacoustic_data.txt")
 parser.add_argument("wordfi", help = "Txt file containing all words to search for")
 parser.add_argument("TARG", help = "target phone in arpabet")
 parser.add_argument("subject", help="subjnumber")
@@ -78,7 +78,7 @@ print(WORDS)
 
 subbmpdir = os.path.join(args.directory,args.subject)
 acoustfi = TARG+'acoustic_data.txt'
-afi = os.path.join(args.acoustdir,acoustfi)
+afi = os.path.join(os.path.join(args.acoustdir,args.subject),acoustfi)
 
 # open one image in subbmpdir to get size
 
@@ -86,14 +86,18 @@ q = 0
 dirind = 0
 while q == 0: # account for possibility that dirs might be empty won't be any good
     try:
-        somebmptime = os.listdir(subbmpdir)[dirind]
+        utterances = (glob.glob(os.path.join(subbmpdir,'201*')))
+        somebmptime = utterances[dirind]
+        # print(somebmptime)
         somebmpdir = os.path.join(subbmpdir,somebmptime)
         subjframelist = re.compile('.*\.jpg')
-        dirjpgs = [i for i in os.listdir(somebmpdir) if (subjframelist.search(i)]       
+        # print(subjframelist)
+        dirjpgs = [i for i in os.listdir(somebmpdir) if (subjframelist.search(i))]       
+        # print(dirjpgs)
         somebmp = dirjpgs[0]
-        im = np.array(Image.open(somebmp))
+        im = np.array(Image.open(os.path.join(os.path.join(subbmpdir,somebmptime),somebmp)))
         q,s = im.shape[0:2]
-     except IndexError as e:
+    except IndexError as e:
         dirind = dirind+1    
 
 # with open(afi) as afi_csv:
@@ -104,11 +108,9 @@ times = []
 stims = []
 framenum = []
 frames = None
-frames = np.empty([len(os.listdir(subbmpdir))]+list(im.shape[0:2])) * np.nan  
+frames = np.empty([len(utterances)]+list(im.shape[0:2])) * np.nan  
 
-ac_df = pandas.read_csv(afi,
-    index_col = 'timestamp'
-    )    
+ac_df = pandas.read_csv(afi)
 # get length of csv
     
 for index, row in ac_df.iterrows():
@@ -117,28 +119,31 @@ for index, row in ac_df.iterrows():
     frmtime = row['frmtime']
     stim = row['stim']
     # get sync file
-    utt = os.path.join(args.acoustdir, ts)
+    utt =os.path.join(os.path.join(args.acoustdir,args.subject), ts)
     syncfile = os.path.join(utt,(ts+'.bpr.sync.txt'))
     if not os.path.isfile(syncfile):
         print("can't find syncfile")
         continue
     try:
         sm = audiolabel.LabelManager(from_file = syncfile, from_type = 'table', sep = '\t', fields_in_head = False, fields = 't1,frameidx')
-        frmnum = int(sm.tier('frameidx').label_at(rt_frmtime).text)
+        frmnum = int(sm.tier('frameidx').label_at(frmtime).text)
     except ValueError:
         syncfile = os.path.join(utt, (timestamp + '.bpr.sync.TextGrid')) # god you're so smart
         # print(syncfile)
         sm = audiolabel.LabelManager(from_file = syncfile, from_type='praat')#,sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
-        frmnum = int(sm.tier('pulse_idx').label_at(rt_frmtime).text)
+        frmnum = int(sm.tier('pulse_idx').label_at(frmtime).text)
     # add frame to array    
     bmpdir = os.path.join(subbmpdir,ts)
-    subjframelist = re.compile('.*\.jpg')
-    dirjpgs = [i for i in os.listdir(bmpdir) if (subjframelist.search(i)]
-    frmind = frmnum - 1
+#    subjframelist = re.compile('.*\.jpg')
+#    dirjpgs = [i for i in os.listdir(bmpdir) if (subjframelist.search(i))]
+    frmind = frmnum# - 1
+
+    # create name of file
     testinds = [frmind, frmind-1, frmind+1]# one-frame tolerance
     for t in range (0,len(testinds)):
         thisind = testinds[t]
-        theframe = dirjpgs[thisind]
+        theframe = ts + '.' + str(thisind) + '.jpg'
+        # theframe = dirjpgs[thisind]
         openframe = np.array(Image.open(os.path.join(bmpdir,theframe)))
         brightness = np.linalg.norm(openframe)
         if brightness > 25000: # bad frame
@@ -146,24 +151,31 @@ for index, row in ac_df.iterrows():
             continue
         else:
             break
-    frames[arrind,:,:] = theframe   
-    times.append[ts]
-    stims.append[stim]
-    framenum.append[thisind+1]     
-    arrind = arrind + 1
+    frames[index,:,:] = openframe   
+    times.append(ts)
+    stims.append(stim)
+    framenum.append(thisind+1)     
+#    arrind = arrind + 1
 
 keep_indices = np.where(~np.isnan(frames).any(axis=(1,2)))[0]
+print(keep_indices)
+print(times)
+frames = np.squeeze(frames)
+times = np.squeeze(times)
+print(times)
+stims = np.squeeze(stims)
+framenum = np.squeeze(framenum)
 kept_frames = frames[keep_indices]
 kept_times = times[keep_indices]
 kept_stims = stims[keep_indices]
-kept_framenums = framenums[keep_indices]            
+kept_framenum = framenum[keep_indices]            
         
 
 # test and add masks
 
 testframe = kept_frames[5]
 rds = 65 # test radius
-cx = w/2 # start center for lower mask
+cx = s/2 # start center for lower mask
 
 
 # first find lower mask
@@ -177,9 +189,9 @@ while success == 0:
     plt.show()
 # ask opinion upon closing
     resp = input('Is the mask centered?')
-    if resp == 'y' | if resp == 'gdx':
+    if (resp == 'y'):#  | resp == 'gdx'):
         success = 1
-    elif resp 'tr':
+    elif resp == 'tr':
         cx = cx -5
     elif resp == 'tl':
         cx = cx + 5
@@ -280,9 +292,13 @@ plt.close()
 # now do the subtraction
 
 # average frame
-avgfrm = np.mean(kept_frams, axis = 0)
+avgfrm = np.mean(kept_frames, axis = 0)
 # norm of the average frame
 normavgfrm = np.linalg.norm(avgfrm) # slight digression from original
+
+raw_list = []
+norm_list = []
+normalized_list = []
 
 for i in np.arange(len(kept_frames)):
     rawdiff = kept_frames[i,:,:] - avgfrm # matrix of difference
@@ -307,14 +323,14 @@ outfiname = TARG + '_mask_diffs_frmtime.txt'
 outdiffs = os.path.join(subbmpdir, outfiname)
 od = open(outdiffs, 'w')
 od.write('\t'.join(['subject','norm_avg','normalized_avg','raw_normavg','raw_normavg_normed','avg_brightness'])+'\n')
-od.write('\t'.join([args.subject,str(norm_avg),str(normalized_avg),str(rawdiff_avg_norm),str(rawdiff_avg_norm_normed),str(normavgfrm))+'\n')
+od.write('\t'.join([args.subject,str(norm_avg),str(normalized_avg),str(rawdiff_avg_norm),str(rawdiff_avg_norm_normed),str(normavgfrm)])+'\n')
 od.close()
 
 # separate file with by-timestamp info
 byfiname = TARG + '_mask_diffs_byts_frmtime.txt'
 byts = os.path.join(subbmpdir, byfiname)
 data_headers = ["timestamp","framenum","normdiff","normeddiff"] 
-b = np.row_stack((data_headers,np.column_stack((kept_ts,kept_framenums,norm_list,normalized_list))))
+b = np.row_stack((data_headers,np.column_stack((kept_times,kept_framenum,norm_list,normalized_list))))
 np.savetxt(byts,b,fmt="%s",delimiter = ",")
 
 
