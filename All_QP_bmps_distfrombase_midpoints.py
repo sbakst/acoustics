@@ -101,6 +101,9 @@ frmf1 = []
 
 # rpca = None
 mpca = None
+framenorms = []
+
+
 
 
 for dirs, times, files in os.walk(subbmpdir):
@@ -110,7 +113,7 @@ for dirs, times, files in os.walk(subbmpdir):
         ts.append(timestamp)
         subjrframelist = []
         utt = os.path.join(utildir,str(timestamp))
-        syncfile = os.path.join(utt,(timestamp+'.bpr.sync.txt'))
+        syncfile = os.path.join(subbmpdir, timestamp, (timestamp+'.bpr.sync.txt'))#os.path.join(utt,(timestamp+'.bpr.sync.txt'))
        # print(syncfile)
         if not os.path.isfile(syncfile):
             print("can't find syncfile")
@@ -122,7 +125,8 @@ for dirs, times, files in os.walk(subbmpdir):
         stimtext = stim.read()
         print (stimtext)
         stimmy = stimtext[6:]
-        print(stimmy)
+        stimmy = re.sub("[^a-zA-Z]+", "", stimmy)        
+        print('no'+stimmy+'yes')
         if int(args.subject) > 120:
             stimmy = stimtext
         stimulus.append(str(stimtext))
@@ -178,17 +182,20 @@ for dirs, times, files in os.walk(subbmpdir):
                 print('that was the midframe')
                 framename = timestamp + '.' + str(midfrm) + '.jpg'
                 theframe = os.path.join(bmpdir,framename)
+                print(theframe)
                 if not (os.path.isfile(theframe)):
                     midfrm = midfrm+1
+                    print(midfrm)
                     framename = timestamp + '.' + str(midfrm) + '.jpg'
+                    theframe = os.path.join(bmpdir,framename)
                 if np.linalg.norm(np.array(Image.open(theframe)))> 25000:
                     midfrm = midfrm + 1
                     framename = timestamp + '.' + str(midfrm) + '.jpg'
                 framenos.append(midfrm)
                 openframe = np.array(Image.open(os.path.join(bmpdir,framename)))
-                print(np.linalg.norm(openframe))
-                mymidframe = ndimage.median_filter(openframe,5)
-                mpca[tindex,:,:] = mymidframe
+                framenorms.append(np.linalg.norm(openframe))
+                # mymidframe = ndimage.median_filter(openframe,5)
+                mpca[tindex,:,:] = openframe #mymidframe
 
 
 print(len(mpca))
@@ -223,6 +230,12 @@ kept_ts = ts[keep_indices]
 
 # try mask
 # masking is being done on mpca
+
+
+#if os.path.isfile(os.path.join(bmpdir,(TARG+'maskparams.txt')))
+# load file and extract params
+
+
 
 testframe = kept_mpca[5] # 
 rds = 65 # test radius
@@ -284,33 +297,33 @@ testframe = kept_mpca[5]
 
 # semi-circular mask
 
-cx = s/2
+ux = s/2
 radius = 180
 success = 0
 while success == 0 :
     h, w = testframe.shape[:2]
-    mask = create_circular_mask(h,w, center = [cx,q], radius = radius, shape = 'semi')
+    mask = create_circular_mask(h,w, center = [ux,q], radius = radius, shape = 'semi')
     masked_img = testframe.copy()
     masked_img[mask] = 0
     plt.imshow(masked_img, cmap = "Greys_r")
     plt.show()
-    resp = input('Is the mask centered? (y, tl, tr)')
+    resp = input('Is the mask centered? (y, tl, tr, sug)')
 
     if resp == 'y' : 
         success = 1
     elif resp == 'tr':
-        cx = cx - 5
+        ux = ux - 5
     elif resp == 'tl':
-        cx = cx + 5
+        ux = ux + 5
     elif resp == 'sug':
-        cx = input('Enter an x-coordinate. Currently displayed is ' + str(cx))
-        cx = int(cx)
+        ux = input('Enter an x-coordinate. Currently displayed is ' + str(ux))
+        ux = int(ux)
 plt.close()
 
 success = 0
 while success == 0:    
     h, w = testframe.shape[:2]
-    mask = create_circular_mask(h, w, center = [cx,q], radius = radius, shape = 'semi')
+    mask = create_circular_mask(h, w, center = [ux,q], radius = radius, shape = 'semi')
     masked_img = testframe.copy()
     masked_img[mask] = 0
     plt.imshow(masked_img, cmap = "Greys_r")
@@ -352,7 +365,7 @@ plt.close()
 
 for i in range(0,(kept_mpca.shape[0])):
     maskframe = kept_mpca[i]
-    mask = create_circular_mask(h, w, center = [cx,q], radius = radius, shape = 'semi')
+    mask = create_circular_mask(h, w, center = [ux,q], radius = radius, shape = 'semi')
     masked_img = maskframe.copy()
     masked_img[mask] = 0
     if i == 1:
@@ -473,8 +486,8 @@ np.savetxt(datafi, h, fmt = "%s", delimiter = ",")
 maskfi = TARG + 'maskparams.txt'
 maskparams = os.path.join(subbmpdir, maskfi)
 mp = open(maskparams, 'w')
-mp.write('\t'.join(['posq','low_radius','high_radius'])+'\n')
-mp.write('\t'.join([str(q), str(rds), str(radius)]))
+mp.write('\t'.join(['lowx','highx','highq','low_radius','high_radius'])+'\n')
+mp.write('\t'.join([str(cx),str(ux),str(q), str(rds), str(radius)]))
 mp.close()
 
 
