@@ -123,7 +123,9 @@ for dirs, times, files in os.walk(subbmpdir):
         stimtext = stim.read()
         print (stimtext)
         stimmy = stimtext[6:]
+        stimmy = re.sub("[^a-zA-Z]+", "", stimmy)        
         print(stimmy)
+        print('no'+ stimmy +'yes')
         if int(args.subject) > 120:
             stimmy = stimtext
         stimulus.append(str(stimmy))
@@ -170,40 +172,45 @@ for dirs, times, files in os.walk(subbmpdir):
                     sm = audiolabel.LabelManager(from_file = syncfile, from_type = 'table', sep = '\t', fields_in_head = False, fields = 't1,frameidx')
                     midfrm = int(sm.tier('frameidx').label_at(mid_frmtime).text)
                 except ValueError:
-                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='table',sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
-                    midfrm=int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
-                except IndexError:
-                        
                     syncfile = os.path.join(utt, (timestamp + '.bpr.sync.TextGrid'))
-                    print(syncfile)
-
                     sm = audiolabel.LabelManager(from_file = syncfile, from_type='praat')#,sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
-                    midfrm=int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
+                    midfrm = int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
+#                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='table',sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
+#                    midfrm=int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
+#                except IndexError:
+#                        
+#                    syncfile = os.path.join(utt, (timestamp + '.bpr.sync.TextGrid'))
+#                    print(syncfile)
+#
+#                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='praat')#,sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
+#                    midfrm=int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
                 print(midfrm)
                 print('that was the midframe')
                 framename = timestamp + '.' + str(midfrm) + '.jpg'
                 theframe = os.path.join(bmpdir,framename)
+                print(theframe)
                 if not (os.path.isfile(theframe)):
                     midfrm = midfrm+1
+                    print(midfrm)
                     framename = timestamp + '.' + str(midfrm) + '.jpg'
+                    theframe = os.path.join(bmpdir,framename)
                 if np.linalg.norm(np.array(Image.open(theframe)))> 25000:
                     midfrm = midfrm + 1
                     framename = timestamp + '.' + str(midfrm) + '.jpg'
                 framenos.append(midfrm)
                 openframe = np.array(Image.open(os.path.join(bmpdir,framename)))
-                print(np.linalg.norm(openframe))
-#                mymidframe = ndimage.median_filter(openframe,5)
-                mpca[tindex,:,:] = openframe
+                framenorms.append(np.linalg.norm(openframe))
+                # mymidframe = ndimage.median_filter(openframe,5)
+                mpca[tindex,:,:] = openframe #mymidframe
 
 
 print(len(mpca))
 
 
-
-keep_indices = np.where(~np.isnan(mpca).any(axis=(1,2)))[0]
 # print(keep_indices)
 print(len(times))
 frames = np.squeeze(mpca)
+keep_indices = np.where(~np.isnan(frames).any(axis=(1,2)))[0]
 times = np.squeeze(ts)
 # print(times)
 stims = np.squeeze(stimulus)
@@ -276,6 +283,32 @@ for i in range(0,(kept_frames.shape[0])):
 testframe = kept_frames[5]
 
 # semi-circular upper mask
+
+ux = s/2
+radius = 180
+success = 0
+while success == 0 :
+    h, w = testframe.shape[:2]
+    mask = create_circular_mask(h,w, center = [ux,q], radius = radius, shape = 'semi')
+    masked_img = testframe.copy()
+    masked_img[mask] = 0
+    plt.imshow(masked_img, cmap = "Greys_r")
+    plt.show()
+    resp = input('Is the mask centered? (y, tl, tr, sug)')
+
+    if resp == 'y' : 
+        success = 1
+    elif resp == 'tr':
+        ux = ux - 5
+    elif resp == 'tl':
+        ux = ux + 5
+    elif resp == 'sug':
+        ux = input('Enter an x-coordinate. Currently displayed is ' + str(ux))
+        ux = int(ux)
+plt.close()
+
+
+
 hrad = 180
 success = 0
 while success == 0 :
@@ -413,8 +446,8 @@ for n in np.arange(0,numwords):
 maskfi = TARG + 'mbw_maskparams.txt'
 maskparams = os.path.join(subbmpdir, maskfi)
 mp = open(maskparams, 'w')
-mp.write('\t'.join(['posx','low_radius','high_radius','height'])+'\n')
-mp.write('\t'.join([str(cx), str(rds), str(hrad),str(hq)]))
+mp.write('\t'.join(['posx','low_radius','highx','high_radius','height'])+'\n')
+mp.write('\t'.join([str(cx), str(rds), str(ux),str(hrad),str(hq)]))
 mp.close()
 
 
