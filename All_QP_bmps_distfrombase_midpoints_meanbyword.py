@@ -20,7 +20,9 @@ import glob
 import matplotlib
 import matplotlib.pyplot as plt
 from ultratils.exp import Exp
+import csv
 from itertools import *
+from numpy import nan
 
 from sklearn import decomposition
 from sklearn.decomposition import PCA
@@ -89,8 +91,41 @@ print(WORDS)
 subbmpdir = os.path.join(args.directory,args.subject)
 utildir = os.path.join(args.otherdir,args.subject)
 
+cx = None
+rds = None
+ux = None
+hrad = None
+hq = None
 
-framenos = [] # frame number
+
+omaskfi = os.path.join(subbmpdir,'Smaskparams.txt')
+if os.path.isfile(omaskfi):
+    mf = open(omaskfi)
+    mfr = csv.reader(mf,delimiter='\t')
+    rows = [r for r in mfr]
+    mparams = rows[1]
+    print(mparams)
+    cx = int(float(mparams[0]))
+    rds= int((mparams[3]))
+    ux = int(float(mparams[1]))
+    hrad = int((mparams[4]))
+    hq = int((mparams[2])) 
+    
+nmaskfi = os.path.join(subbmpdir,TARG + 'mbw_maskparams.txt')    
+if os.path.isfile(nmaskfi):
+    mf = open(nmaskfi)
+    mfr = csv.reader(mf,delimiter='\t')
+    rows = [r for r in mfr]
+    mparams = rows[1]
+    print(mparams)
+    cx = int(float(mparams[0]))
+    rds= int(float(mparams[1]))
+    ux = int((mparams[2]))
+    hrad = int((mparams[3]))
+    hq = int((mparams[4])) 
+    
+
+framenos = None # frame number
 frmtimes = [] # when the frame occurs from sync.txt
 stimulus = [] # stimulus word
 ts = []
@@ -112,23 +147,27 @@ for dirs, times, files in os.walk(subbmpdir):
         subjrframelist = []
         utt = os.path.join(utildir,str(timestamp))
         syncfile = os.path.join(utt,(timestamp+'.bpr.sync.txt'))
+        stimfile = os.path.join(utt, 'stim.txt')
+        if os.path.isfile(stimfile):
+            stim = open(stimfile)
+            stimtext = stim.read()
+            print (stimtext)
+            stimmy = stimtext[6:]
+            stimmy = re.sub("[^a-zA-Z]+", "", stimmy)        
+            print(stimmy)
+            print('no'+ stimmy +'yes')
+            if int(args.subject) > 120:
+                stimmy = stimtext
+            stimulus.append(str(stimmy))
+        else:
+            continue
        # print(syncfile)
         if not os.path.isfile(syncfile):
             print("can't find syncfile")
+            if not os.path.isfile(os.path.join(utt, (timestamp + '.bpr.sync.TextGrid'))):
 #        print(syncfile)
 #        if not syncfile:
-            continue
-        stimfile = os.path.join(utt, 'stim.txt')
-        stim = open(stimfile)
-        stimtext = stim.read()
-        print (stimtext)
-        stimmy = stimtext[6:]
-        stimmy = re.sub("[^a-zA-Z]+", "", stimmy)        
-        print(stimmy)
-        print('no'+ stimmy +'yes')
-        if int(args.subject) > 120:
-            stimmy = stimtext
-        stimulus.append(str(stimmy))
+                continue
         if stimmy in WORDS:
             print('yay!')
 #        if any(substring in stimtext for substring in WORDS): 
@@ -168,15 +207,21 @@ for dirs, times, files in os.walk(subbmpdir):
                 imnbr = len(imlist) #get the number of images
                 if mpca is None:
                     mpca = np.empty([len(os.listdir(subbmpdir))]+list(im.shape[0:2])) * np.nan
+                    framenos = np.empty([len(os.listdir(subbmpdir))])*np.nan
                 try:
                     sm = audiolabel.LabelManager(from_file = syncfile, from_type = 'table', sep = '\t', fields_in_head = False, fields = 't1,frameidx')
                     midfrm = int(sm.tier('frameidx').label_at(mid_frmtime).text)
+                    print('oonoo')
+                except ValueError:
+                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='table',sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
+                    midfrm=int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
+                    print('eenee')
                 except ValueError:
                     syncfile = os.path.join(utt, (timestamp + '.bpr.sync.TextGrid'))
+                    os.path.isfile(syncfile)
                     sm = audiolabel.LabelManager(from_file = syncfile, from_type='praat')#,sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
                     midfrm = int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
-#                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='table',sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
-#                    midfrm=int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
+                     
 #                except IndexError:
 #                        
 #                    syncfile = os.path.join(utt, (timestamp + '.bpr.sync.TextGrid'))
@@ -185,49 +230,86 @@ for dirs, times, files in os.walk(subbmpdir):
 #                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='praat')#,sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
 #                    midfrm=int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
                 print(midfrm)
-                print('that was the midframe')
-                framename = timestamp + '.' + str(midfrm) + '.jpg'
-                theframe = os.path.join(bmpdir,framename)
-                print(theframe)
-                if not (os.path.isfile(theframe)):
-                    midfrm = midfrm+1
-                    print(midfrm)
-                    framename = timestamp + '.' + str(midfrm) + '.jpg'
-                    theframe = os.path.join(bmpdir,framename)
-                if np.linalg.norm(np.array(Image.open(theframe)))> 25000:
-                    midfrm = midfrm + 1
-                    framename = timestamp + '.' + str(midfrm) + '.jpg'
-                framenos.append(midfrm)
-                openframe = np.array(Image.open(os.path.join(bmpdir,framename)))
-                framenorms.append(np.linalg.norm(openframe))
-                # mymidframe = ndimage.median_filter(openframe,5)
-                mpca[tindex,:,:] = openframe #mymidframe
-
+                frmind = midfrm
+                
+                testinds = [frmind, frmind-1, frmind+1]# one-frame tolerance
+                for t in range (0,len(testinds)):
+                    thisind = testinds[t]
+                    theframe = timestamp + '.' + str(thisind) + '.jpg'
+                    # theframe = dirjpgs[thisind]
+                    try:
+                        openframe = np.array(Image.open(os.path.join(bmpdir,theframe)))
+                    except FileNotFoundError:
+                        continue
+                    brightness = np.linalg.norm(openframe)
+                    if brightness > 25000: # bad frame
+                        theframe = float(nan)
+                        openframe = float(nan)
+                        continue
+                    else:
+                        break
+                mpca[tindex,:,:] = openframe   
+                framenos[tindex]=(thisind+1)     
+#                
+#                print('that was the midframe')
+#                framename = timestamp + '.' + str(midfrm) + '.jpg'
+#                theframe = os.path.join(bmpdir,framename)
+#                print(theframe)
+#                if not (os.path.isfile(theframe)):
+#                    midfrm = midfrm+1
+#                    print(midfrm)
+#                    framename = timestamp + '.' + str(midfrm) + '.jpg'
+#                    theframe = os.path.join(bmpdir,framename)
+#                if np.linalg.norm(np.array(Image.open(theframe)))> 25000:
+#                    midfrm = midfrm + 1
+#                    if np.linalg.norm(np.array(Image.open(midfrm)))> 25000:
+#                        midfrm = midfrm - 2
+#                        if np.linalg.norm(np.array(Image.open(midfrm)))> 25000:
+#                            mpca[tindex,:,:] = nan
+#                            continue
+#                framename = timestamp + '.' + str(midfrm) + '.jpg'
+#                framenos.append(midfrm)
+#                openframe = np.array(Image.open(os.path.join(bmpdir,framename)))
+#                # framenos.append(np.linalg.norm(openframe))
+#                # mymidframe = ndimage.median_filter(openframe,5)
+#                mpca[tindex,:,:] = openframe #mymidframe
+#
 
 print(len(mpca))
-
+print(len(framenos))
 
 # print(keep_indices)
-print(len(times))
+print(len(ts))
 frames = np.squeeze(mpca)
-keep_indices = np.where(~np.isnan(frames).any(axis=(1,2)))[0]
+keep_indices = np.where(~np.isnan(frames).any(axis=(1,2)))
+naninds = np.where(np.isnan(frames).any(axis=(1,2)))
+print(naninds)
+print(keep_indices)
 times = np.squeeze(ts)
 # print(times)
 stims = np.squeeze(stimulus)
-framenum = np.squeeze(framenos)
+print(stims)
+print(len(stims))
+framenums = np.squeeze(framenos)
+#print(framenums)
+#print(framenos)
+
 kept_frames = frames[keep_indices]
 kept_times = times[keep_indices]
 kept_stims = stims[keep_indices]
-kept_framenum = framenum[keep_indices]            
+kept_framenum = framenums[keep_indices]            
         
 
 # test and add masks
 
 testframe = kept_frames[5]
-rds = 65 # test radius
-cx = s/2 # start center for lower mask
-
-
+print(kept_times[5])
+if rds is None:
+    rds = 65 # test radius
+if cx is None:
+    cx = s/2 # start center for lower mask
+print(cx)
+print(rds)
 # first find lower mask
 success = 0
 while success == 0:
@@ -284,12 +366,14 @@ testframe = kept_frames[5]
 
 # semi-circular upper mask
 
-ux = s/2
-radius = 180
+if ux is None:
+    ux = s/2
+if hrad is None:
+    hrad = 180
 success = 0
 while success == 0 :
     h, w = testframe.shape[:2]
-    mask = create_circular_mask(h,w, center = [ux,q], radius = radius, shape = 'semi')
+    mask = create_circular_mask(h,w, center = [ux,q], radius = hrad, shape = 'semi')
     masked_img = testframe.copy()
     masked_img[mask] = 0
     plt.imshow(masked_img, cmap = "Greys_r")
@@ -309,11 +393,10 @@ plt.close()
 
 
 
-hrad = 180
 success = 0
 while success == 0 :
     h, w = testframe.shape[:2]
-    mask = create_circular_mask(h, w, center = [s/2,q], radius = hrad, shape = 'semi')
+    mask = create_circular_mask(h, w, center = [ux,q], radius = hrad, shape = 'semi')
     masked_img = testframe.copy()
     masked_img[mask] = 0
     plt.imshow(masked_img, cmap = "Greys_r")
@@ -335,10 +418,11 @@ print(hrad)
 testframe = masked_img
 
 success = 0
-hq = 180
+if hq is None:
+    hq = 180
 while success == 0:
     h, w = testframe.shape[:2]
-    mask = create_circular_mask(h, w, center = [s/2, hq], radius = hrad, shape = 'semi')
+    mask = create_circular_mask(h, w, center = [ux, hq], radius = hrad, shape = 'semi')
     masked_img = testframe.copy()
     masked_img[mask] = 0
     plt.imshow(masked_img, cmap = "Greys_r")
@@ -359,7 +443,7 @@ while success == 0:
 # add semi-circular mask
 for i in range(0,(kept_frames.shape[0])):
     maskframe = kept_frames[i]
-    mask = create_circular_mask(h, w, center = [s/2,hq], radius = hrad, shape = 'semi')
+    mask = create_circular_mask(h, w, center = [ux,hq], radius = hrad, shape = 'semi')
     masked_img = maskframe.copy()
     masked_img[mask] = 0
     if i == 1:
