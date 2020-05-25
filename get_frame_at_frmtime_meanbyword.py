@@ -90,14 +90,14 @@ hrad = None
 if os.path.isfile(omaskfi):
     mf = open(omaskfi)
     mfr = csv.read(mf)
-    mparams = mfr[1]
+    rows = [r for r in mfr]
+    mparams = rows[1]
     cx = mparams[0]
     rds = mparams[1]
     yht = mparams[2]
     hrad = mparams[3]
 #mp.write('\t'.join(['low_ctr_x','low_radius','high_ctr_y','high_radius'])+'\n')
 #mp.write('\t'.join([str(cx), str(rds), str(q),str(radius)]))
-
 
 
 
