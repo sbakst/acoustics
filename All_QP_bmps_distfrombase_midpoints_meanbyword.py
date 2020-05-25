@@ -160,6 +160,7 @@ for dirs, times, files in os.walk(subbmpdir):
                 stimmy = stimtext
             stimulus.append(str(stimmy))
         else:
+            stimulus.append('doh!')
             continue
        # print(syncfile)
         if not os.path.isfile(syncfile):
