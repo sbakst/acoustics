@@ -570,8 +570,3 @@ if args.pca:
 
 #standev = 
 #f = open(
-
-
-
-
-
