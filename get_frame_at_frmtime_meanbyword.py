@@ -65,6 +65,7 @@ parser.add_argument("subject", help="subjnumber")
 # parser.add_argument("-n", "n_components", help="Number of principal components to output", action="store_true")
 parser.add_argument("-v", "--visualize", help="Produce plots of PC loadings on fan",action="store_true")
 parser.add_argument("-p", "--pca", help="run pca",action="store_true")
+parser.add_argument("-m", "--mask", help="rerun mask params")
 
 args = parser.parse_args()
 
@@ -220,45 +221,46 @@ if cx is None:
 
 # first find lower mask
 success = 0
-while success == 0:
-    h, w = testframe.shape[:2]
-    mask = create_circular_mask(h, w, center = [cx,h], radius = rds)
-    masked_img = testframe.copy()
-    masked_img[mask] = 0
-    plt.imshow(masked_img, cmap = "Greys_r")
-    plt.show()
-# ask opinion upon closing
-    resp = input('Is the mask centered? (y, tr, tl, sug)')
-    if (resp == 'y'):#  | resp == 'gdx'):
-        success = 1
-    elif resp == 'tr':
-        cx = cx -5
-    elif resp == 'tl':
-        cx = cx + 5
-    elif resp == 'sug':
-        cx = int(input('Enter an x-coordinate. Currently displayed is ' + str(cx)))
-        print(cx)
+if args.mask:
+    while success == 0:
+        h, w = testframe.shape[:2]
+        mask = create_circular_mask(h, w, center = [cx,h], radius = rds)
+        masked_img = testframe.copy()
+        masked_img[mask] = 0
+        plt.imshow(masked_img, cmap = "Greys_r")
+        plt.show()
+    # ask opinion upon closing
+        resp = input('Is the mask centered? (y, tr, tl, sug)')
+        if (resp == 'y'):#  | resp == 'gdx'):
+            success = 1
+        elif resp == 'tr':
+            cx = cx -5
+        elif resp == 'tl':
+            cx = cx + 5
+        elif resp == 'sug':
+            cx = int(input('Enter an x-coordinate. Currently displayed is ' + str(cx)))
+            print(cx)
         
-success = 0
-while success == 0:
-    h, w = testframe.shape[:2]
-    mask = create_circular_mask(h, w, center = [cx,h], radius = rds)
-    masked_img = testframe.copy()
-    masked_img[mask] = 0
-    plt.imshow(masked_img, cmap = "Greys_r")
-    plt.show()
-    resp = input('Is the mask too big, too small, or juuuuust right? (tb, ts, gdx, sug)')
-    if resp == 'tb':
-        rds = rds - 3
-    elif resp == 'ts':
-        rds = rds + 7
-    elif resp == 'sug':
-        rds = input('Enter a number for the radius. On the screen is ' + str(rds))
-        rds = int(rds)        
-    elif resp == 'gdx':
-        success = 1
-    print(rds)
-    plt.close()
+    success = 0
+    while success == 0:
+        h, w = testframe.shape[:2]
+        mask = create_circular_mask(h, w, center = [cx,h], radius = rds)
+        masked_img = testframe.copy()
+        masked_img[mask] = 0
+        plt.imshow(masked_img, cmap = "Greys_r")
+        plt.show()
+        resp = input('Is the mask too big, too small, or juuuuust right? (tb, ts, gdx, sug)')
+        if resp == 'tb':
+            rds = rds - 3
+        elif resp == 'ts':
+            rds = rds + 7
+        elif resp == 'sug':
+            rds = input('Enter a number for the radius. On the screen is ' + str(rds))
+            rds = int(rds)        
+        elif resp == 'gdx':
+            success = 1
+        print(rds)
+        plt.close()
 
 
 # add lower mask to all images
@@ -273,54 +275,56 @@ for i in range(0,(kept_frames.shape[0])):
 testframe = kept_frames[5]
 
 # semi-circular upper mask
-success = 0
-if hrad is None:
-    hrad = 180
-while success == 0 :
-    h, w = testframe.shape[:2]
-    mask = create_circular_mask(h, w, center = [s/2,q], radius = hrad, shape = 'semi')
-    masked_img = testframe.copy()
-    masked_img[mask] = 0
-    plt.imshow(masked_img, cmap = "Greys_r")
-    plt.show()
-    resp = input('Is the mask too wide, too narrow, or juuuust right?(tw, tn, gdx, sug)')
-    if resp == 'tw':
-        hrad = hrad - 10
-    elif resp == 'tn':
-        hrad =hrad + 10
-    elif resp == 'sug':
-        hrad = input('Enter a number for the radius. On the screen is ' + str(radius))
-        hrad = int(radius)
-        print(hrad)
-    elif resp == 'gdx':
-        success = 1
-    plt.close()
-plt.close()
-print(hrad)
-testframe = masked_img
 
-success = 0
-if yht is None:
-    yht = 180
-while success == 0:
-    h, w = testframe.shape[:2]
-    mask = create_circular_mask(h, w, center = [s/2, yht], radius = hrad, shape = 'semi')
-    masked_img = testframe.copy()
-    masked_img[mask] = 0
-    plt.imshow(masked_img, cmap = "Greys_r")
-    plt.show()
-    ht = input('Is the mask too high, too low, or juuust right?(th, tl, gdx, sug)')
-    if ht == 'th':
-       yht = yht+10
-    elif ht == 'tl':
-        yht = yht-10
-    elif ht == 'sug':
-        yht = input('Enter a number to add to the height; larger = lower. On the screen is ' +str (yht))
-        yht = int(yht)
-    elif ht == 'gdx':
-        success = 1
-
+if args.mask:
+    success = 0
+    if hrad is None:
+        hrad = 180
+    while success == 0 :
+        h, w = testframe.shape[:2]
+        mask = create_circular_mask(h, w, center = [s/2,q], radius = hrad, shape = 'semi')
+        masked_img = testframe.copy()
+        masked_img[mask] = 0
+        plt.imshow(masked_img, cmap = "Greys_r")
+        plt.show()
+        resp = input('Is the mask too wide, too narrow, or juuuust right?(tw, tn, gdx, sug)')
+        if resp == 'tw':
+            hrad = hrad - 10
+        elif resp == 'tn':
+            hrad =hrad + 10
+        elif resp == 'sug':
+            hrad = input('Enter a number for the radius. On the screen is ' + str(radius))
+            hrad = int(radius)
+            print(hrad)
+        elif resp == 'gdx':
+            success = 1
+        plt.close()
     plt.close()
+    print(hrad)
+    testframe = masked_img
+    
+    success = 0
+    if yht is None:
+        yht = 180
+    while success == 0:
+        h, w = testframe.shape[:2]
+        mask = create_circular_mask(h, w, center = [s/2, yht], radius = hrad, shape = 'semi')
+        masked_img = testframe.copy()
+        masked_img[mask] = 0
+        plt.imshow(masked_img, cmap = "Greys_r")
+        plt.show()
+        ht = input('Is the mask too high, too low, or juuust right?(th, tl, gdx, sug)')
+        if ht == 'th':
+           yht = yht+10
+        elif ht == 'tl':
+            yht = yht-10
+        elif ht == 'sug':
+            yht = input('Enter a number to add to the height; larger = lower. On the screen is ' +str (yht))
+            yht = int(yht)
+        elif ht == 'gdx':
+            success = 1
+    
+        plt.close()
 
 # add semi-circular mask
 for i in range(0,(kept_frames.shape[0])):
@@ -342,6 +346,7 @@ kept_stims = [item.lower() for item in kept_stims]
 words = [item.lower() for item in WORDS] 
 words=list(set(words))
 numwords = len(words)
+frmreps = np.empty([len(words)]+list(im.shape[0:2])) * np.nan  
 print('here are the words')
 print(words)
 print(numwords)
@@ -352,17 +357,8 @@ for n in np.arange(0,numwords):
     b = kept_frames[wordinds]
 #    print(b)
     avgfrm = np.mean(b, axis = 0)
+    frmreps[n,:,:] = avgfrm
     normavgfrm = np.linalg.norm(avgfrm)
-    
-
-
-
-# now do the subtraction
-
-# average frame
-#avgfrm = np.mean(kept_frames, axis = 0)
-# norm of the average frame
-#normavgfrm = np.linalg.norm(avgfrm) # slight digression from original
 
     raw_list = []
     norm_list = []
@@ -407,6 +403,21 @@ for n in np.arange(0,numwords):
     b = np.row_stack((data_headers,np.column_stack((wordtimes,wordframenum,norm_list,normalized_list))))
     np.savetxt(byts,b,fmt="%s",delimiter = ",")
 
+
+worddifflist = []
+word1 = []
+word2 = []
+wordinds = np.arange(len(words))
+cwbright = np.linalg.norm(np.mean(frmreps,axis=0))
+for nw in combinations(wordinds, 2):
+    wdiff = np.linalg.norm(frmreps[nw[0],:,:]-frmreps[nw[1],:,:])
+    wdiffnorm = wdiff/cwbright
+    worddifflist.append(wdiffnorm)
+    word1.append(words[nw[0]])
+    word2.append(words[nw[1]])
+
+# TODO: print out (stack?)
+# rerun mask option
 
 
 # mask params
