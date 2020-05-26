@@ -275,55 +275,6 @@ for i in range(0,(kept_frames.shape[0])):
 testframe = kept_frames[5]
 
 # semi-circular upper mask
-<<<<<<< HEAD
-success = 0
-if hrad is None:
-    hrad = 180
-while success == 0 :
-    h, w = testframe.shape[:2]
-    mask = create_circular_mask(h, w, center = [s/2,q], radius = hrad, shape = 'semi')
-    masked_img = testframe.copy()
-    masked_img[mask] = 0
-    plt.imshow(masked_img, cmap = "Greys_r")
-    plt.show()
-    resp = input('Is the mask too wide, too narrow, or juuuust right?(tw, tn, gdx, sug)')
-    if resp == 'tw':
-        hrad = hrad - 10
-    elif resp == 'tn':
-        hrad =hrad + 10
-    elif resp == 'sug':
-        hrad = input('Enter a number for the radius. On the screen is ' + str(hrad))
-        hrad = int(hrad)
-        print(hrad)
-    elif resp == 'gdx':
-        success = 1
-    plt.close()
-plt.close()
-print(hrad)
-testframe = masked_img
-
-success = 0
-if yht is None:
-    yht = 180
-while success == 0:
-    h, w = testframe.shape[:2]
-    mask = create_circular_mask(h, w, center = [s/2, yht], radius = hrad, shape = 'semi')
-    masked_img = testframe.copy()
-    masked_img[mask] = 0
-    plt.imshow(masked_img, cmap = "Greys_r")
-    plt.show()
-    ht = input('Is the mask too high, too low, or juuust right?(th, tl, gdx, sug)')
-    if ht == 'th':
-       yht = yht+10
-    elif ht == 'tl':
-        yht = yht-10
-    elif ht == 'sug':
-        yht = input('Enter a number to add to the height; larger = lower. On the screen is ' +str (yht))
-        yht = int(yht)
-    elif ht == 'gdx':
-        success = 1
-=======
->>>>>>> 2c3a666c887bd6bb5d9a599c19e9f5d337f24cda
 
 if args.mask:
     success = 0
@@ -342,8 +293,8 @@ if args.mask:
         elif resp == 'tn':
             hrad =hrad + 10
         elif resp == 'sug':
-            hrad = input('Enter a number for the radius. On the screen is ' + str(radius))
-            hrad = int(radius)
+            hrad = input('Enter a number for the radius. On the screen is ' + str(hrad))
+            hrad = int(hrad)
             print(hrad)
         elif resp == 'gdx':
             success = 1
@@ -470,9 +421,10 @@ for nw in combinations(wordinds, 2):
 
 
 # mask params
-maskfi = TARG + 'mbw_maskparams.txt'
-maskparams = os.path.join(subbmpdir, maskfi)
-mp = open(maskparams, 'w')
-mp.write('\t'.join(['low_ctr_x','low_radius','high_ctr_y','high_radius'])+'\n')
-mp.write('\t'.join([str(cx), str(rds), str(yht),str(hrad)]))
-mp.close()
+if args.mask:
+    maskfi = TARG + 'mbw_maskparams.txt'
+    maskparams = os.path.join(subbmpdir, maskfi)
+    mp = open(maskparams, 'w')
+    mp.write('\t'.join(['low_ctr_x','low_radius','high_ctr_y','high_radius'])+'\n')
+    mp.write('\t'.join([str(cx), str(rds), str(yht),str(hrad)]))
+    mp.close()
