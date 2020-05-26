@@ -121,8 +121,8 @@ if os.path.isfile(nmaskfi):
     mparams = rows[1]
     print(mparams)
     cx = int(float(mparams[0]))
-    rds= int(float(mparams[1]))
-    ux = int((mparams[2]))
+    rds= int((mparams[1]))
+    ux = int(float(mparams[2]))
     hrad = int((mparams[3]))
     hq = int((mparams[4])) 
     
@@ -216,14 +216,17 @@ for dirs, times, files in os.walk(subbmpdir):
                     midfrm = int(sm.tier('frameidx').label_at(mid_frmtime).text)
                     print('oonoo')
                 except ValueError:
-                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='table',sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
-                    midfrm=int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
-                    print('eenee')
-                except ValueError:
                     syncfile = os.path.join(utt, (timestamp + '.bpr.sync.TextGrid'))
                     os.path.isfile(syncfile)
                     sm = audiolabel.LabelManager(from_file = syncfile, from_type='praat')#,sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
                     midfrm = int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
+                except ValueError:
+                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='table',sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
+                    midfrm=int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
+                    print('eenee')
+
+# TODO: run both exceptions??
+
                      
 #                except IndexError:
 #                        
