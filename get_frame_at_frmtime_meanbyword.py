@@ -90,13 +90,13 @@ hrad = None
 
 if os.path.isfile(omaskfi):
     mf = open(omaskfi)
-    mfr = csv.read(mf)
+    mfr = csv.reader(mf,delimiter='\t')
     rows = [r for r in mfr]
     mparams = rows[1]
-    cx = mparams[0]
-    rds = mparams[1]
-    yht = mparams[2]
-    hrad = mparams[3]
+    cx = int(float(mparams[0]))
+    rds = int((mparams[1]))
+    yht = int(mparams[2])
+    hrad = int(mparams[3])
 #mp.write('\t'.join(['low_ctr_x','low_radius','high_ctr_y','high_radius'])+'\n')
 #mp.write('\t'.join([str(cx), str(rds), str(q),str(radius)]))
 
@@ -293,8 +293,8 @@ if args.mask:
         elif resp == 'tn':
             hrad =hrad + 10
         elif resp == 'sug':
-            hrad = input('Enter a number for the radius. On the screen is ' + str(radius))
-            hrad = int(radius)
+            hrad = input('Enter a number for the radius. On the screen is ' + str(hrad))
+            hrad = int(hrad)
             print(hrad)
         elif resp == 'gdx':
             success = 1
@@ -421,9 +421,10 @@ for nw in combinations(wordinds, 2):
 
 
 # mask params
-maskfi = TARG + 'mbw_maskparams.txt'
-maskparams = os.path.join(subbmpdir, maskfi)
-mp = open(maskparams, 'w')
-mp.write('\t'.join(['low_ctr_x','low_radius','high_ctr_y','high_radius'])+'\n')
-mp.write('\t'.join([str(cx), str(rds), str(yht),str(hrad)]))
-mp.close()
+if args.mask:
+    maskfi = TARG + 'mbw_maskparams.txt'
+    maskparams = os.path.join(subbmpdir, maskfi)
+    mp = open(maskparams, 'w')
+    mp.write('\t'.join(['low_ctr_x','low_radius','high_ctr_y','high_radius'])+'\n')
+    mp.write('\t'.join([str(cx), str(rds), str(yht),str(hrad)]))
+    mp.close()
