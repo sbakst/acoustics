@@ -213,17 +213,17 @@ kept_framenum = framenum[keep_indices]
 
 testframe = kept_frames[5]
 
-if rds is None:
-    rds = 65 # test radius
-if cx is None:
-    cx = s/2 # start center for lower mask
 
 
 # first find lower mask
+h, w = testframe.shape[:2]
 success = 0
-if args.mask:
+if args.mask or rds is None:
+    if rds is None:
+        rds = 65 # test radius
+    if cx is None:
+        cx = s/2 # start center for lower mask
     while success == 0:
-        h, w = testframe.shape[:2]
         mask = create_circular_mask(h, w, center = [cx,h], radius = rds)
         masked_img = testframe.copy()
         masked_img[mask] = 0
@@ -276,7 +276,7 @@ testframe = kept_frames[5]
 
 # semi-circular upper mask
 
-if args.mask:
+if args.mask or hrad is None:
     success = 0
     if hrad is None:
         hrad = 180
@@ -419,6 +419,11 @@ for nw in combinations(wordinds, 2):
 # TODO: print out (stack?)
 # rerun mask option
 
+coartname = 'mbw_coarticulation.txt'
+coartfi = os.path.join(subbmpdir, coartname)
+coart_headers = ["coaDiff","word1","word2"]
+c = np.row_stack((coart_headers,np.column_stack((worddifflist,word1,word2))))
+np.savetxt(coartfi,c,fmt="%s",delimiter=',')
 
 # mask params
 if args.mask:
