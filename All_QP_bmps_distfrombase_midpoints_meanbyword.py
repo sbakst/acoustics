@@ -216,14 +216,14 @@ for dirs, times, files in os.walk(subbmpdir):
                     midfrm = int(sm.tier('frameidx').label_at(mid_frmtime).text)
                     print('oonoo')
                 except ValueError:
+                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='table',sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
+                    midfrm=int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
+                    print('eenee')
+                except ValueError:
                     syncfile = os.path.join(utt, (timestamp + '.bpr.sync.TextGrid'))
                     os.path.isfile(syncfile)
                     sm = audiolabel.LabelManager(from_file = syncfile, from_type='praat')#,sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
                     midfrm = int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
-                except ValueError:
-                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='table',sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
-                    midfrm=int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
-                    print('eenee')
 
 # TODO: run both exceptions??
 
@@ -466,6 +466,7 @@ kept_stims = [item.lower() for item in kept_stims]
 
 words = [item.lower() for item in WORDS] 
 words=list(set(words))
+words = [i for i in words if i] # delete empty strings!
 numwords = len(words)
 frmreps = np.empty([len(words)]+list(im.shape[0:2])) * np.nan  
 print('here are the words')
@@ -543,9 +544,14 @@ word1 = []
 word2 = []
 wordinds = np.arange(len(words))
 cwbright = np.linalg.norm(np.mean(frmreps,axis=0))
+print(cwbright)
+print('that was brightness')
+
 for nw in combinations(wordinds, 2):
     wdiff = np.linalg.norm(frmreps[nw[0],:,:]-frmreps[nw[1],:,:])
+    print(wdiff)
     wdiffnorm = wdiff/cwbright
+    print(wdiffnorm)
     worddifflist.append(wdiffnorm)
     word1.append(words[nw[0]])
     word2.append(words[nw[1]])
