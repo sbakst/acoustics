@@ -65,7 +65,7 @@ parser.add_argument("subject", help="subjnumber")
 # parser.add_argument("-n", "n_components", help="Number of principal components to output", action="store_true")
 parser.add_argument("-v", "--visualize", help="Produce plots of PC loadings on fan",action="store_true")
 parser.add_argument("-p", "--pca", help="run pca",action="store_true")
-parser.add_argument("-m", "--mask", help="rerun mask params")
+parser.add_argument("-m", "--mask", help="rerun mask params",action="store_true")
 
 args = parser.parse_args()
 
