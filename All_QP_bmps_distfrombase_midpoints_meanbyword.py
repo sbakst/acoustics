@@ -216,14 +216,14 @@ for dirs, times, files in os.walk(subbmpdir):
                     midfrm = int(sm.tier('frameidx').label_at(mid_frmtime).text)
                     print('oonoo')
                 except ValueError:
-                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='table',sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
-                    midfrm=int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
-                    print('eenee')
-                except ValueError:
                     syncfile = os.path.join(utt, (timestamp + '.bpr.sync.TextGrid'))
                     os.path.isfile(syncfile)
                     sm = audiolabel.LabelManager(from_file = syncfile, from_type='praat')#,sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
                     midfrm = int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
+                except ValueError:
+                    sm = audiolabel.LabelManager(from_file = syncfile, from_type='table',sep = '\t', fields_in_head = True, fields = 'seconds,pulse_idx,raw_data_idx')
+                    midfrm=int(sm.tier('pulse_idx').label_at(mid_frmtime).text)
+                    print('eenee')                    
 
 # TODO: run both exceptions??
 
@@ -243,10 +243,42 @@ for dirs, times, files in os.walk(subbmpdir):
                     thisind = testinds[t]
                     theframe = timestamp + '.' + str(thisind) + '.jpg'
                     # theframe = dirjpgs[thisind]
-                    try:
-                        openframe = np.array(Image.open(os.path.join(bmpdir,theframe)))
-                    except FileNotFoundError:
-                        continue
+                    if not os.path.isfile(os.path.join(bmpdir,theframe)):
+                        bmp2cp = os.path.join(utildir,timestamp,timestamp + '.' + str(thisind) + '.bmp')
+                        if os.path.isfile(bmp2cp):
+                            shutil.copy(bmp2cp,bmpdir)
+                        else:
+                            e = Exp(expdir=bmpdir)
+                            e.gather()
+                            for a in e.acquisitions:
+                                print(a.timestamp)
+                                # bprtg = os.path.join(bmpdir,timestamp+'.bpr.sync.TextGrid' )
+                                for l in a.pulse_idx.tslice(t1=t1, t2 = t2):
+                                    print(l)
+                                    try:
+                                        d = a.frame_at(l.t1, convert = True)
+                                        if d[0] is None:
+                                            print('skipping ' + str(l.text))
+                                            continue
+                                    except ValueError:
+                                        print('what is a struct.error')
+                                        continue    
+                                    d=d[0]
+                                    d = np.flipud(d).astype(np.uint8)
+                                    frame = Image.fromarray(d)
+                                    imgname = '{:}.{:}.bmp'.format(a.timestamp, l.text)
+                                    frame.save(os.path.join(a.abspath, imgname))
+                        bmp2mog = os.path.join(bmpdir,timestamp + '.' + str(thisind) + '.bmp')
+                        print(bmp2mog)
+                        if not os.path.isfile(bmp2mog):
+                            continue
+                        proc = subprocess.Popen(['mogrify', '-format', 'jpg', bmp2mog])
+                        proc.wait()
+                        if proc.returncode != 0:
+                            for line in proc.stderr:
+                                sys.stderr.write(line + '\n')
+                            raise Exception("mogrify exited with status: {0}".format(proc.returncode))
+                    openframe = np.array(Image.open(os.path.join(bmpdir,theframe)))
                     brightness = np.linalg.norm(openframe)
                     if brightness > 25000: # bad frame
                         theframe = float(nan)
