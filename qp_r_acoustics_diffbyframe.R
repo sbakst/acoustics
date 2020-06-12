@@ -165,3 +165,56 @@ f3sd2019<-rbind(#f3sd101,
       f3sd128 )
 
 racoustics = data.frame(subject, f3sd2019)
+
+
+
+### s acoustics
+
+
+s='102'
+loadpath = '~/Desktop/vmshare/QP/raw_qp_data/sub_bmps/'
+sacoustics<-read.csv(paste(loadpath,s,'/s_acousticdata.txt',sep=""),skip=1,sep=' ',header=FALSE)
+sacoustics$subject<-s
+
+subs<-c('103','109')
+loadpath = '~/Desktop/vmshare/QP/raw_qp_data/recovered_from_glacier/Sarah/Coronals/'
+for (s in subs){
+  sdata<-read.csv(paste(loadpath,s,'/s_acousticdata.txt',sep=""),skip=1,sep=' ',header=FALSE)
+  sdata$subject<-s
+  sacoustics<-rbind(sacoustics,sdata)
+}
+
+subs<-c('104','105','108','110','112','113','114','115','116','117','118','119','120')
+loadpath = '~/Desktop/vmshare/QP/raw_qp_data/semester2/Sarah/Coronals/'
+
+for (s in subs){
+  sdata<-read.csv(paste(loadpath,s,'/s_acousticdata.txt',sep=""),skip=1,sep=' ',header=FALSE)
+  sdata$subject<-s
+  sacoustics<-rbind(sacoustics,sdata)
+}
+
+subs<-c('121','122','123','124','125','126','127','128')
+loadpath = '~/Desktop/vmshare/QP/raw_qp_data/'
+
+for (s in subs){
+  sdata<-read.csv(paste(loadpath,s,'/s_acousticdata.txt',sep=""),skip=1,sep=' ',header=FALSE)
+  sdata$subject<-s
+  sacoustics<-rbind(sacoustics,sdata)
+}
+
+sacoustics<-subset(sacoustics,V2=='S')
+
+
+names(sacoustics)[names(sacoustics)=='V1']<-'timestamp'
+names(sacoustics)[names(sacoustics)=='V2']<-'phone'
+names(sacoustics)[names(sacoustics)=='V3']<-'word'
+names(sacoustics)[names(sacoustics)=='V4']<-'vowel'
+names(sacoustics)[names(sacoustics)=='V5']<-'position'
+names(sacoustics)[names(sacoustics)=='V6']<-'max'
+names(sacoustics)[names(sacoustics)=='V7']<-'maxfreq'
+
+sacoustics<-subset(sacoustics,sacoustics$maxfreq>2000)
+sacoustics<-subset(sacoustics,word!='BOLUS')
+sacoustics$timestamp<-as.character(sacoustics$timestamp)
+sacoustics$timestamp<-sapply(strsplit(sacoustics$timestamp,split='.',fixed=TRUE), function(x) (x[1]))
+
