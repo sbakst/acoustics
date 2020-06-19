@@ -66,6 +66,7 @@ parser.add_argument("subject", help="subjnumber")
 parser.add_argument("-v", "--visualize", help="Produce plots of PC loadings on fan",action="store_true")
 parser.add_argument("-p", "--pca", help="run pca",action="store_true")
 parser.add_argument("-m", "--mask", help="rerun mask params",action="store_true")
+parser.add_argument("-r", "--print", help="print mean minus trial",action="store_true")
 
 args = parser.parse_args()
 
@@ -424,6 +425,30 @@ coartfi = os.path.join(subbmpdir, coartname)
 coart_headers = ["coaDiff","word1","word2"]
 c = np.row_stack((coart_headers,np.column_stack((worddifflist,word1,word2))))
 np.savetxt(coartfi,c,fmt="%s",delimiter=',')
+
+
+if args.print:
+# do this to print midpoint frame and some diff frames
+
+   pic=avgfrm
+   mag = np.max(pic)-np.min(pic)
+   pic = (pic-np.min(pic))/mag*255
+   printy = misc.imsave(os.path.join(subbmpdir,'AverageS.png'),pic)
+
+
+# raw_list
+
+# image_shape = (q,s)
+   for r in range(0, len(raw_list):
+      pic = raw_list[r]
+      mag = np.max(pic) - np.min(pic)
+      pic = (pic-np.min(pic))/mag*255
+      pcn = misc.imsave(os.path.join(subbmpdir,'dfb'+str(r+1)+'.png'),pic)
+
+
+
+
+
 
 # mask params
 if args.mask:
