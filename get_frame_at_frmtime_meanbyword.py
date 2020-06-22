@@ -57,9 +57,9 @@ def create_circular_mask(h, w, center=None, radius=None, shape = None):
 parser = argparse.ArgumentParser()
 parser.add_argument("directory", help="Experiment directory containing all subjects' bmps and jpgs")
 parser.add_argument("acoustdir", help="Path to TARGacoustic_data.txt")
+parser.add_argument("bigbmpdir", help = "where to find all the bmps for this subject, if any are missing")
 parser.add_argument("wordfi", help = "Txt file containing all words to search for")
 parser.add_argument("TARG", help = "target phone in arpabet")
-parser.add_argument("bigbmpdir", help = "where to find all the bmps for this subject, if any are missing")
 parser.add_argument("subject", help="subjnumber")
 
 # parser.add_argument("-n", "n_components", help="Number of principal components to output", action="store_true")
@@ -405,6 +405,30 @@ for n in np.arange(0,numwords):
     np.savetxt(byts,b,fmt="%s",delimiter = ",")
 
 
+
+
+    if args.print:
+# do this to print midpoint frame and some diff frames
+
+        pic=avgfrm
+        mag = np.max(pic)-np.min(pic)
+        pic = (pic-np.min(pic))/mag*255
+        printy = misc.imsave(os.path.join(subbmpdir,'AverageR'+bword+'.png'),pic)
+
+
+# raw_list
+
+# image_shape = (q,s)
+        for r in range(0, len(raw_list)):
+            pic = raw_list[r]
+            mag = np.max(pic) - np.min(pic)
+            pic = (pic-np.min(pic))/mag*255
+            pcn = misc.imsave(os.path.join(subbmpdir,'dfbr'+bword+str(r+1)+'.png'),pic)
+
+
+
+
+
 worddifflist = []
 word1 = []
 word2 = []
@@ -426,24 +450,6 @@ coart_headers = ["coaDiff","word1","word2"]
 c = np.row_stack((coart_headers,np.column_stack((worddifflist,word1,word2))))
 np.savetxt(coartfi,c,fmt="%s",delimiter=',')
 
-
-if args.print:
-# do this to print midpoint frame and some diff frames
-
-   pic=avgfrm
-   mag = np.max(pic)-np.min(pic)
-   pic = (pic-np.min(pic))/mag*255
-   printy = misc.imsave(os.path.join(subbmpdir,'AverageS.png'),pic)
-
-
-# raw_list
-
-# image_shape = (q,s)
-   for r in range(0, len(raw_list):
-      pic = raw_list[r]
-      mag = np.max(pic) - np.min(pic)
-      pic = (pic-np.min(pic))/mag*255
-      pcn = misc.imsave(os.path.join(subbmpdir,'dfb'+str(r+1)+'.png'),pic)
 
 
 
