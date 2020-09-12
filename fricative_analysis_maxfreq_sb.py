@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 '''\nfricative_analysis.py
 fricative_analysis.py: Do spectral analysis on fricative portions of soundfiles in specified directory tree.
 
@@ -64,12 +64,12 @@ import matplotlib.pyplot as plt
 
 
 def usage():
-    print(sys.exit(__doc__))
+    print sys.exit(__doc__)
 
 ### Additions for my qp
 
-onset = ["rah", "Rome", "ream", "SEW", "SOB", "SEA", "sew", "sob", "sea"]
-coda = ["bar", "bore", "beer", "BOSS", "PIECE", "DOSE", "boss", "piece", "dose"]
+onset = ["rah", "Rome", "ream", "SEW", "SOB", "SEA"]
+coda = ["bar", "bore", "beer", "BOSS", "PIECE", "DOSE"]
 aset = ["rah", "bar", "BOSS", "SOB"]
 oset = ["bore", "DOSE", "Rome", "SEW"]
 ###
@@ -77,13 +77,13 @@ oset = ["bore", "DOSE", "Rome", "SEW"]
 
 
 head = '\t'.join(('frame phone word vowel position max maxfreq').split())
-print(head)
+print head
 
 # spectral computation parameter
-window = 0.005 # window size in seconds
+window = 0.01 # window size in seconds
 
 # Here is a definition of the phonetic symbols we will analyze in this script
-fricatives = re.compile("S")
+fricatives = re.compile("S|SH|F|V|TH|DH")
 
 # I use a "shared" directory in the Phonetics machine that I call BPM
 # you can set up a shared directory in the Virtual Box settings for your machine
@@ -106,18 +106,11 @@ for root,dirs,files in os.walk(directory):  # walk the directory
     for soundfile in files:     # check each sound file
         if not '.wav' in soundfile:  # if not a .wav, go on to the next file
             continue   
-        if 'ch2' in soundfile:
-            continue
-        if 'bpr.wav' in soundfile:
-            continue    
+            
                  
         frame = os.path.splitext(soundfile)[0]  # get the frame name
         tg = os.path.join(root,os.path.splitext(soundfile)[0]+'.TextGrid')  # expect a TextGrid file
-        if not os.path.isfile(tg):
-            tg = os.path.join(root,(os.path.splitext(os.path.splitext(os.path.splitext(frame)[0])[0])[0] + '.TextGrid'))
-        
-        if not os.path.isfile(tg):
-            continue   
+	       
         sf=float(subprocess.check_output(["hditem", "-i","record_freq", os.path.join(root,soundfile)]))
         
         wsamps = int(round(window*sf))  # window size in samples
@@ -130,6 +123,7 @@ for root,dirs,files in os.walk(directory):  # walk the directory
             # from the label get the location of the midpoint, and the text of the label
             
             midpoint = f.center
+            
             phone = f.text
             
             #calculate a spectrum - store in temp.spec
@@ -143,22 +137,16 @@ for root,dirs,files in os.walk(directory):  # walk the directory
                 
             # read the spectrum into this script    
             spectrum_string = subprocess.check_output(["pplain","-fre_spec_val","temp2.fea"])
-            spectrum_string = str(spectrum_string)
-            spec = spectrum_string[2:-1].rstrip().split(' ')    # break the string into separate value
-#spec = float(spec)
+            spec = spectrum_string.rstrip().split(' ')    # break the string into separate values
             freq_string = subprocess.check_output(["hditem","-ifreqs","temp2.fea"])
-            freq_string = str(freq_string)
             freq = freq_string.rstrip().split(' ')
-            #spectrum = #map(float,spec)           # convert array from string to floating point number
-            spectrum = [float(i) for i in spec[0:len(spec)-2]]
+            spectrum = map(float,spec)           # convert array from string to floating point number
             maxx=0
             maxfreq = 0
             for i in range(10, 59):
                 if spectrum[i] > maxx:
-                    maxfreq = float(freq[i])
+                    maxfreq = freq[i]
                     maxx = spectrum[i]
-                    #print(maxx)
-                    #print(maxfreq)
             
             
             #low=sum(spectrum[0:19])/20              # sum the amplitudes in the bottom half
@@ -182,25 +170,24 @@ for root,dirs,files in os.walk(directory):  # walk the directory
 
 
             # this line prints results
-            print (frame, phone, str(word), str (vowel), position, maxx, maxfreq)
+            print frame, phone, str(word), str (vowel), position, maxx, maxfreq
 
             
             # -------------------- code to show a spectrum plot ----------------
             #freq_string = subprocess.check_output(["hditem","-ifreqs","temp2.fea"])
             #freq = freq_string.rstrip().split(' ')
-#            frequency = [float(j) for j in freq[1:len(freq)-1]]  #[float(i) for i in freq[0:len(freq)-1]]#map(float,freq)
-#            print(len(frequency))
-#            smax = max(spectrum)               # a useful number to have for plotting the text label
+            #frequency = map(float,freq)
+            #smax = max(spectrum)               # a useful number to have for plotting the text label
 
-#            fig = plt.figure(1)
-#            plt.plot(freq[1:59],spectrum[1:59],color="black")
-#            plt.plot(freq[1:19],spectrum[1:19],color="blue")
-#            plt.plot(freq[40:59],spectrum[40:59],color="red")
-#            plt.xlabel('Frequency')
-#            plt.ylabel('Amplitude')
-#            plt.grid(True)
-#            #plt.text(100,smax-2,"H-L = " + str(hl_diff))
-#            plt.show()         
+            #fig = plt.figure(1)
+            #plt.plot(freq,spectrum,color="black")
+            #plt.plot(freq[0:19],spectrum[0:19],color="blue")
+            #plt.plot(freq[40:60],spectrum[40:60],color="red")
+            #plt.xlabel('Frequency')
+            #plt.ylabel('Amplitude')
+            #plt.grid(True)
+            #plt.text(100,smax-2,"H-L = " + str(hl_diff))
+            #plt.show()         
             # ------------------- end of plotting code ----------------------
             
 
