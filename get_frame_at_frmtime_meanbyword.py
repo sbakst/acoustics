@@ -394,7 +394,7 @@ for n in np.arange(0,numwords):
 
     
 
-    outfiname = bword + '_mbw_mask_diffs_frmtime.txt'
+    outfiname = bword + '_mbw_mask_diffs_frmtime_stone.txt'
     outdiffs = os.path.join(subbmpdir, outfiname)
     od = open(outdiffs, 'w')
     od.write('\t'.join(['subject','norm_avg','normalized_avg','raw_normavg','raw_normavg_normed','raw_normavg_stone','avg_brightness','stone_mean_brightness'])+'\n')
@@ -405,7 +405,7 @@ for n in np.arange(0,numwords):
     wordframenum = kept_framenum[wordinds]
 
     # separate file with by-timestamp info
-    byfiname = bword + '_mbw_mask_diffs_byts_frmtime.txt'
+    byfiname = bword + '_mbw_mask_diffs_byts_frmtime_stone.txt'
     byts = os.path.join(subbmpdir, byfiname)
     data_headers = ["timestamp","framenum","normdiff","normeddiff","stonenormeddiff"] 
     b = np.row_stack((data_headers,np.column_stack((wordtimes,wordframenum,norm_list,normalized_list,stone_list))))
@@ -456,7 +456,7 @@ for nw in combinations(wordinds, 2):
 # TODO: print out (stack?)
 # rerun mask option
 
-coartname = 'mbw_coarticulation.txt'
+coartname = 'mbw_coarticulation_stone.txt'
 coartfi = os.path.join(subbmpdir, coartname)
 coart_headers = ["coaDiff",'coaDiff_stone',"word1","word2"]
 c = np.row_stack((coart_headers,np.column_stack((worddifflist,stdifflist,word1,word2))))
