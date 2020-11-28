@@ -360,10 +360,12 @@ for n in np.arange(0,numwords):
     avgfrm = np.mean(b, axis = 0)
     frmreps[n,:,:] = avgfrm
     normavgfrm = np.linalg.norm(avgfrm)
+    stoneavgfrm = avgfrm.mean()
 
     raw_list = []
     norm_list = []
     normalized_list = []
+    stone_list = []
 
     for i in np.arange(len(b)):
         rawdiff = b[i,:,:] - avgfrm # matrix of difference
@@ -372,17 +374,22 @@ for n in np.arange(0,numwords):
         norm_list.append(normdiff)
         normalizeddiff = normdiff/normavgfrm # norm of matrix of difference, normalized by the norm of the mean frame
         normalized_list.append(normalizeddiff)
+        stonediff = normdiff/stoneavgfrm
+        stone_list.append(stonediff) # divide by mean brightness, as suggested by Reviewer #1 (presumed to be Kween Maureen Stone)
 
 # take averages of raw diff before norming
     rawdiff_avg = np.mean(raw_list)
     rawdiff_avg_norm = np.linalg.norm(rawdiff_avg)
     rawdiff_avg_norm_normed = rawdiff_avg_norm/normavgfrm
-
+    rawdiff_avg_norm_stone = rawdiff_avg_norm/stoneavgfrm
 
 # norm avg
     norm_avg = np.mean(norm_list)
 # -alized
     normalized_avg = np.mean(normalized_list)
+# turn to stone
+    stone_avg = np.mean(stone_list
+
 # TODO: ADD TO LIST
 
     
@@ -390,8 +397,8 @@ for n in np.arange(0,numwords):
     outfiname = bword + '_mbw_mask_diffs_frmtime.txt'
     outdiffs = os.path.join(subbmpdir, outfiname)
     od = open(outdiffs, 'w')
-    od.write('\t'.join(['subject','norm_avg','normalized_avg','raw_normavg','raw_normavg_normed','avg_brightness'])+'\n')
-    od.write('\t'.join([args.subject,str(norm_avg),str(normalized_avg),str(rawdiff_avg_norm),str(rawdiff_avg_norm_normed),str(normavgfrm)])+'\n')
+    od.write('\t'.join(['subject','norm_avg','normalized_avg','raw_normavg','raw_normavg_normed','raw_normavg_stone','avg_brightness','stone_mean_brightness'])+'\n')
+    od.write('\t'.join([args.subject,str(norm_avg),str(normalized_avg),str(rawdiff_avg_norm),str(rawdiff_avg_norm_normed),str(rawdiff_avg_norm_stone),str(normavgfrm),str(stoneavgfrm)])+'\n')
     od.close()
     
     wordtimes = kept_times[wordinds]
@@ -400,8 +407,8 @@ for n in np.arange(0,numwords):
     # separate file with by-timestamp info
     byfiname = bword + '_mbw_mask_diffs_byts_frmtime.txt'
     byts = os.path.join(subbmpdir, byfiname)
-    data_headers = ["timestamp","framenum","normdiff","normeddiff"] 
-    b = np.row_stack((data_headers,np.column_stack((wordtimes,wordframenum,norm_list,normalized_list))))
+    data_headers = ["timestamp","framenum","normdiff","normeddiff","stonenormeddiff"] 
+    b = np.row_stack((data_headers,np.column_stack((wordtimes,wordframenum,norm_list,normalized_list,stone_list))))
     np.savetxt(byts,b,fmt="%s",delimiter = ",")
 
 
@@ -430,14 +437,19 @@ for n in np.arange(0,numwords):
 
 
 worddifflist = []
+stdifflist = []
 word1 = []
 word2 = []
 wordinds = np.arange(len(words))
 cwbright = np.linalg.norm(np.mean(frmreps,axis=0))
+mnfrmreps = np.mean(frmreps,axis=0)
+stbright = mnfrmreps.mean()
 for nw in combinations(wordinds, 2):
     wdiff = np.linalg.norm(frmreps[nw[0],:,:]-frmreps[nw[1],:,:])
     wdiffnorm = wdiff/cwbright
     worddifflist.append(wdiffnorm)
+    stdiffnorm = wdiff/stbright
+    stdifflist.append(stdiffnorm)
     word1.append(words[nw[0]])
     word2.append(words[nw[1]])
 
@@ -446,8 +458,8 @@ for nw in combinations(wordinds, 2):
 
 coartname = 'mbw_coarticulation.txt'
 coartfi = os.path.join(subbmpdir, coartname)
-coart_headers = ["coaDiff","word1","word2"]
-c = np.row_stack((coart_headers,np.column_stack((worddifflist,word1,word2))))
+coart_headers = ["coaDiff",'coaDiff_stone',"word1","word2"]
+c = np.row_stack((coart_headers,np.column_stack((worddifflist,stdifflist,word1,word2))))
 np.savetxt(coartfi,c,fmt="%s",delimiter=',')
 
 
