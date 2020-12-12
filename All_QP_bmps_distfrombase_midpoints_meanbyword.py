@@ -281,6 +281,7 @@ for dirs, times, files in os.walk(subbmpdir):
                     openframe = np.array(Image.open(os.path.join(bmpdir,theframe)))
                     brightness = np.linalg.norm(openframe)
                     if brightness > 25000: # bad frame
+                        print('ah, shit')
                         theframe = float(nan)
                         openframe = float(nan)
                         continue
@@ -402,6 +403,9 @@ for i in range(0,(kept_frames.shape[0])):
 
 testframe = kept_frames[5]
 
+
+plt.switch_backend('TkAgg')
+
 # semi-circular upper mask
 
 if args.mask or hrad is None:
@@ -504,7 +508,7 @@ frmreps = np.empty([len(words)]+list(im.shape[0:2])) * np.nan
 print('here are the words')
 print(words)
 print(numwords)
-for n in np.arange(0,numwords):
+for n in np.arange(0,numwords): # figure out how to brightness normalize for words.
     bword = words[n]
     wordinds = ([i for i, x in enumerate(kept_stims) if x == bword])
     print(wordinds)
@@ -513,6 +517,10 @@ for n in np.arange(0,numwords):
     avgfrm = np.mean(b, axis = 0)
     frmreps[n,:,:] = avgfrm
     normavgfrm = np.linalg.norm(avgfrm)
+    stoneavgfrm = avgfrm.mean()
+    normmin = avgfrm.min()
+    linint = avgfrm - normmin
+    intmax = linint.max()
     
 
 
@@ -527,25 +535,46 @@ for n in np.arange(0,numwords):
     raw_list = []
     norm_list = []
     normalized_list = []
-
+    stone_list = []
+    prestoneraw_list = [] # brightness normalize BEFORE frobenius norm
+    prestone_list = []
+    linraw_list = []
+    lin_list = []
+    
+# DIVIDE EARLIER
+# DIVIDE EARLIER
+# DIVIDE EARLIER
+# DIVIDE EARLIER
     for i in np.arange(len(b)):
         rawdiff = b[i,:,:] - avgfrm # matrix of difference
+        rawstone = rawdiff/stoneavgfrm
+        rawlin = (rawdiff-normmin)/intmax
         raw_list.append(rawdiff)
+        prestoneraw_list.append(rawstone)
+        linraw_list.append(rawlin)
         normdiff = np.linalg.norm(rawdiff) # norm of matrix of difference
         norm_list.append(normdiff)
         normalizeddiff = normdiff/normavgfrm # norm of matrix of difference, normalized by the norm of the mean frame
         normalized_list.append(normalizeddiff)
+        stonediff = normdiff/stoneavgfrm
+        stone_list.append(stonediff) # divide by mean brightness, as suggested by Reviewer #1 (presumed to be Kween Maureen Stone)
+        prestone_list.append(np.linalg.norm(rawstone))
+        lin_list.append(np.linalg.norm(rawlin))
+
 
 # take averages of raw diff before norming
     rawdiff_avg = np.mean(raw_list)
     rawdiff_avg_norm = np.linalg.norm(rawdiff_avg)
     rawdiff_avg_norm_normed = rawdiff_avg_norm/normavgfrm
-
+    rawdiff_avg_norm_stone = rawdiff_avg_norm/stoneavgfrm
+    
 
 # norm avg
     norm_avg = np.mean(norm_list)
 # -alized
     normalized_avg = np.mean(normalized_list)
+# turn to stone
+    stone_avg = np.mean(stone_list)
 
 ### save files
 
@@ -553,8 +582,8 @@ for n in np.arange(0,numwords):
     outfiname = bword + '_mbw_mask_diffsfrombase_mid.txt'
     outdiffs = os.path.join(subbmpdir, outfiname)
     od = open(outdiffs, 'w')
-    od.write('\t'.join(['subject','norm_avg','normalized_avg','raw_normavg','raw_normavg_normed','avg_brightness'])+'\n')
-    od.write('\t'.join([args.subject,str(norm_avg),str(normalized_avg),str(rawdiff_avg_norm),str(rawdiff_avg_norm_normed),str(normavgfrm)])+'\n')
+    od.write('\t'.join(['subject','norm_avg','normalized_avg','raw_normavg','raw_normavg_normed','raw_normavg_stone','avg_brightness','stone_mean_brightness'])+'\n')
+    od.write('\t'.join([args.subject,str(norm_avg),str(normalized_avg),str(rawdiff_avg_norm),str(rawdiff_avg_norm_normed),str(rawdiff_avg_norm_stone),str(normavgfrm),str(stoneavgfrm)])+'\n')
     od.close()
     
     wordtimes = kept_times[wordinds]
@@ -563,8 +592,8 @@ for n in np.arange(0,numwords):
     # separate file with by-timestamp info
     byfiname = bword + '_midpt_data.txt'
     dfi = os.path.join(subbmpdir, byfiname)
-    data_headers = ["timestamp","framenum","normdiff","normeddiff"] 
-    h = np.row_stack((data_headers,np.column_stack((wordtimes,wordframenum,norm_list,normalized_list))))
+    data_headers = ["timestamp","framenum","normdiff","normeddiff","stonenormeddiff","prestonenormeddiff","lindiff"] 
+    h = np.row_stack((data_headers,np.column_stack((wordtimes,wordframenum,norm_list,normalized_list,stone_list,prestone_list,lin_list))))
     np.savetxt(dfi,h,fmt="%s",delimiter = ",")
 
 # next time add word >.>
@@ -572,12 +601,19 @@ for n in np.arange(0,numwords):
 
 
 worddifflist = []
+stdifflist = []
+psdifflist = []
+lcwdifflist = []
 word1 = []
 word2 = []
 wordinds = np.arange(len(words))
 cwbright = np.linalg.norm(np.mean(frmreps,axis=0))
+mnfrmreps = np.mean(frmreps,axis=0)
+stbright = mnfrmreps.mean()
 print(cwbright)
 print('that was brightness')
+print(stbright)
+print('that was mean bright')
 
 for nw in combinations(wordinds, 2):
     wdiff = np.linalg.norm(frmreps[nw[0],:,:]-frmreps[nw[1],:,:])
@@ -585,16 +621,28 @@ for nw in combinations(wordinds, 2):
     wdiffnorm = wdiff/cwbright
     print(wdiffnorm)
     worddifflist.append(wdiffnorm)
+    stdiffnorm = wdiff/stbright
+    stdifflist.append(stdiffnorm)
+    # brightness-normalize FIRST
+    psdiff = np.linalg.norm((frmreps[nw[0],:,:]-frmreps[nw[1],:,:])/stbright)
+    psdifflist.append(psdiff)
+    # linear brightness normalize each mean frame based on cross-word mean
+    cwmin = mnfrmreps.min()
+    cwint = mnfrmreps-cwmin
+    cwlinmax = cwint.max()
+    lcwdiff_raw = ((frmreps[nw[0],:,:]-frmreps[nw[1],:,:])-cwmin)/cwlinmax
+    lcwdiff = np.linalg.norm(lcwdiff_raw)
+    lcwdifflist.append(lcwdiff)
     word1.append(words[nw[0]])
     word2.append(words[nw[1]])
 
 # TODO: print out (stack?)
 # rerun mask option
 
-coartname = TARG+'mbw_coarticulation.txt'
+coartname = TARG+'mbw_coarticulation_etal.txt'
 coartfi = os.path.join(subbmpdir, coartname)
-coart_headers = ["coaDiff","word1","word2"]
-c = np.row_stack((coart_headers,np.column_stack((worddifflist,word1,word2))))
+coart_headers = ["coaDiff","coaDiff_stone","prestone_coaDiff","linnorm_coaDiff","word1","word2"]
+c = np.row_stack((coart_headers,np.column_stack((worddifflist,stdifflist,psdifflist,lcwdifflist,word1,word2))))
 np.savetxt(coartfi,c,fmt="%s",delimiter=',')
 
 
