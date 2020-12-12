@@ -17,12 +17,16 @@ import pandas
 import numpy as np
 import shutil
 import datetime
+import tkinter
+import matplotlib
+import matplotlib.pyplot as plt
+matplotlib.use('TkAgg')
 from PIL import Image
 from scipy import misc
 from scipy import ndimage
 from scipy import sparse
 import glob
-import matplotlib.pyplot as plt
+#import tkinter
 from ultratils.exp import Exp
 from itertools import *
 
@@ -111,8 +115,11 @@ while q == 0: # account for possibility that dirs might be empty won't be any go
     try:
         utterances = (glob.glob(os.path.join(subbmpdir,'201*')))
         somebmptime = utterances[dirind]
-        # print(somebmptime)
+       # print(somebmptime)
         somebmpdir = os.path.join(subbmpdir,somebmptime)
+        if not os.path.isdir(somebmpdir):
+            dirind = dirind+1
+            continue
         subjframelist = re.compile('.*\.jpg')
         # print(subjframelist)
         dirjpgs = [i for i in os.listdir(somebmpdir) if (subjframelist.search(i))]       
@@ -214,7 +221,7 @@ kept_framenum = framenum[keep_indices]
 
 testframe = kept_frames[5]
 
-
+plt.switch_backend('TkAgg')
 
 # first find lower mask
 h, w = testframe.shape[:2]
@@ -346,6 +353,7 @@ kept_stims = [item.lower() for item in kept_stims]
 
 words = [item.lower() for item in WORDS] 
 words=list(set(words))
+words = [i for i in words if i] # delete empty strings!
 numwords = len(words)
 frmreps = np.empty([len(words)]+list(im.shape[0:2])) * np.nan  
 print('here are the words')
@@ -388,7 +396,7 @@ for n in np.arange(0,numwords):
 # -alized
     normalized_avg = np.mean(normalized_list)
 # turn to stone
-    stone_avg = np.mean(stone_list
+    stone_avg = np.mean(stone_list)
 
 # TODO: ADD TO LIST
 
